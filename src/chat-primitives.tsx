@@ -32,6 +32,16 @@ export const TOOL_STEP_LABELS: Record<string, string> = {
   escalateToOperator: "Contacting operator",
   checkNegotiationStatus: "Checking negotiation",
   offerChoices: "",
+  offerAddOns: "Preparing add-ons",
+  offerProtection: "Loading protection plans",
+  presentOperatorTerms: "Loading operator terms",
+  collectDates: "Setting dates",
+  updateCheckout: "Updating checkout",
+  postRentalSummary: "Preparing rental summary",
+  collectPhoneForCallback: "Collecting phone number",
+  reserveUnit: "Reserving unit",
+  scheduleWalkthrough: "Scheduling walkthrough",
+  requestCallback: "Requesting callback",
 
   getRentalHistory: "Loading rental history",
   getRentalDetail: "Loading rental details",
@@ -160,7 +170,8 @@ export const TOOL_STEP_LABELS: Record<string, string> = {
 export const HIDDEN_TOOL_STEPS = new Set(["offerChoices"])
 
 export function isToolDone(state?: string): boolean {
-  return state === "result" || state === "output-available" || !state
+  if (!state) return true
+  return ["result", "output-available", "complete", "error", "output-error"].includes(state)
 }
 
 export function isToolError(state?: string): boolean {
