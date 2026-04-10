@@ -1,17 +1,18 @@
 
-[0m[2m[35m$[0m [2m[1mtsup src/index.ts --format cjs,esm --dts --clean --external react --external react-dom[0m
+[0m[2m[35m$[0m [2m[1mtsup src/index.ts --format cjs,esm --dts --clean --external react --external react-dom --external lucide-react[0m
 [34mCLI[39m Building entry: src/index.ts
 [34mCLI[39m Using tsconfig: tsconfig.json
 [34mCLI[39m tsup v8.5.1
+[34mCLI[39m Using tsup config: /Users/welila/Documents/bagdock/packages/hive-react/tsup.config.ts
 [34mCLI[39m Target: es2022
 [34mCLI[39m Cleaning output folder
 [34mCJS[39m Build start
 [34mESM[39m Build start
-[32mCJS[39m [1mdist/index.js [22m[32m24.28 KB[39m
-[32mCJS[39m ⚡️ Build success in 99ms
-[32mESM[39m [1mdist/index.mjs [22m[32m21.52 KB[39m
-[32mESM[39m ⚡️ Build success in 101ms
+[32mESM[39m [1mdist/index.mjs [22m[32m158.81 KB[39m
+[32mESM[39m ⚡️ Build success in 98ms
+[32mCJS[39m [1mdist/index.js [22m[32m179.37 KB[39m
+[32mCJS[39m ⚡️ Build success in 98ms
 DTS Build start
-DTS ⚡️ Build success in 2338ms
-DTS dist/index.d.ts  3.21 KB
-DTS dist/index.d.mts 3.21 KB
+DTS ⚡️ Build success in 3361ms
+DTS dist/index.d.ts  19.81 KB
+DTS dist/index.d.mts 19.81 KB
