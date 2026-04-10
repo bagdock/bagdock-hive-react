@@ -37,7 +37,10 @@ export {
   ToolExecutionStep,
   QuickReplyChips,
   VerificationCard,
+  SecurePhoneInput,
 } from "./chat-primitives"
+
+export type { SecurePhoneInputProps } from "./chat-primitives"
 
 export { ChatMarkdown } from "./chat-markdown"
 export { AGENT_LABELS, ReasoningBlock } from "./reasoning-block"
@@ -92,6 +95,9 @@ export type { HiveHistoryPanelProps } from "./history-panel"
 
 export { HiveInlineAuth, InlineChatAuth } from "./inline-auth"
 export type { HiveInlineAuthProps } from "./inline-auth"
+
+export { OtpInput, obfuscatePhone, obfuscateEmail } from "./otp-input"
+export type { OtpInputProps, OtpStatus } from "./otp-input"
 
 export { HivePostRentalCard, PostRentalCard } from "./post-rental-card"
 export type { HivePostRentalCardProps } from "./post-rental-card"
