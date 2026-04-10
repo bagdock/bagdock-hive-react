@@ -7,6 +7,8 @@ import {
   Check,
   Fingerprint,
   Loader2,
+  Lock,
+  Phone,
   Shield,
 } from "lucide-react"
 
@@ -353,6 +355,107 @@ export function VerificationCard({
           Verify identity
           <ArrowUpRight className="w-3.5 h-3.5 opacity-60" />
         </a>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// SecurePhoneInput — trust-signal card for collecting phone numbers in chat
+// ---------------------------------------------------------------------------
+
+const DEFAULT_PHONE_COUNTRY_CODES = [
+  { code: "+44", flag: "\ud83c\uddec\ud83c\udde7", name: "UK" },
+  { code: "+1", flag: "\ud83c\uddfa\ud83c\uddf8", name: "US" },
+  { code: "+353", flag: "\ud83c\uddee\ud83c\uddea", name: "IE" },
+  { code: "+49", flag: "\ud83c\udde9\ud83c\uddea", name: "DE" },
+  { code: "+33", flag: "\ud83c\uddeb\ud83c\uddf7", name: "FR" },
+  { code: "+61", flag: "\ud83c\udde6\ud83c\uddfa", name: "AU" },
+  { code: "+91", flag: "\ud83c\uddee\ud83c\uddf3", name: "IN" },
+]
+
+export interface SecurePhoneInputProps {
+  reason?: string
+  onSubmit: (phone: string) => void
+  defaultCountryCode?: string
+  countryCodes?: { code: string; flag: string; name: string }[]
+}
+
+export function SecurePhoneInput({
+  reason,
+  onSubmit,
+  defaultCountryCode = "+44",
+  countryCodes = DEFAULT_PHONE_COUNTRY_CODES,
+}: SecurePhoneInputProps) {
+  const [countryCode, setCountryCode] = React.useState(defaultCountryCode)
+  const [phoneNumber, setPhoneNumber] = React.useState("")
+  const [submitted, setSubmitted] = React.useState(false)
+
+  const handleSubmit = () => {
+    if (!phoneNumber.trim()) return
+    const full = `${countryCode}${phoneNumber.replace(/\s/g, "")}`
+    setSubmitted(true)
+    onSubmit(full)
+  }
+
+  if (submitted) {
+    return (
+      <div className="max-w-[90%] rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="px-4 py-4 flex items-center gap-2.5">
+          <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+          <p className="text-sm text-gray-700">Phone number submitted</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-[90%] rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2.5">
+        <Lock className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-900">Secure callback</p>
+          {reason && (
+            <p className="text-xs text-gray-500 mt-0.5">{reason}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="px-4 py-3.5 space-y-2.5">
+        <div className="flex gap-2">
+          <select
+            value={countryCode}
+            onChange={(e) => setCountryCode(e.target.value)}
+            className="w-20 px-2 py-2 rounded-lg border border-gray-200 text-xs text-gray-700 focus:outline-none focus:border-gray-300 bg-white"
+          >
+            {countryCodes.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.flag} {c.code}
+              </option>
+            ))}
+          </select>
+          <input
+            type="tel"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+            placeholder="Phone number"
+            className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-300"
+          />
+        </div>
+
+        <button
+          onClick={handleSubmit}
+          disabled={!phoneNumber.trim()}
+          className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+        >
+          <Phone className="w-3.5 h-3.5" />
+          Confirm number
+        </button>
+
+        <p className="text-[10px] text-gray-400 text-center leading-relaxed">
+          Your number is shared only with the operator for this callback.
+        </p>
       </div>
     </div>
   )

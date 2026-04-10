@@ -4,6 +4,8 @@ import * as React from "react"
 import { ChevronLeft, Loader2, Lock, Mail } from "lucide-react"
 
 import type { AuthResult, CountryCode, SendOtpParams, SendOtpResult, VerifyOtpParams, VerifyOtpResult } from "./types"
+import { OtpInput, obfuscatePhone, obfuscateEmail } from "./otp-input"
+import type { OtpStatus } from "./otp-input"
 
 type AuthStep = "phone-input" | "email-input" | "verify-otp"
 
@@ -41,19 +43,12 @@ export function HiveInlineAuth({
   const [countryCode, setCountryCode] = React.useState(defaultCountryCode)
   const [phoneNumber, setPhoneNumber] = React.useState("")
   const [email, setEmail] = React.useState("")
-  const [otpCode, setOtpCode] = React.useState(["", "", "", "", "", ""])
   const [methodId, setMethodId] = React.useState("")
   const [otpMethod, setOtpMethod] = React.useState<"phone" | "email">("phone")
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
-
-  const otpInputRefs = React.useRef<(HTMLInputElement | null)[]>([])
-
-  React.useEffect(() => {
-    if (step === "verify-otp") {
-      setTimeout(() => otpInputRefs.current[0]?.focus(), 100)
-    }
-  }, [step])
+  const [otpStatus, setOtpStatus] = React.useState<OtpStatus>("idle")
+  const [authResult, setAuthResult] = React.useState<AuthResult | null>(null)
 
   const handleSendPhoneOtp = React.useCallback(async () => {
     if (!phoneNumber.trim()) {
@@ -67,6 +62,7 @@ export function HiveInlineAuth({
       const result = await onSendOtp({ method: "phone", phone: fullPhone })
       setMethodId(result.methodId)
       setOtpMethod("phone")
+      setOtpStatus("idle")
       setStep("verify-otp")
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to send code")
@@ -86,6 +82,7 @@ export function HiveInlineAuth({
       const result = await onSendOtp({ method: "email", email })
       setMethodId(result.methodId)
       setOtpMethod("email")
+      setOtpStatus("idle")
       setStep("verify-otp")
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to send code")
@@ -94,49 +91,36 @@ export function HiveInlineAuth({
     }
   }, [email, onSendOtp])
 
-  const handleVerifyOtp = React.useCallback(async () => {
-    const code = otpCode.join("")
-    if (code.length !== 6) {
-      setError("Please enter the full 6-digit code")
-      return
-    }
-    setIsLoading(true)
+  const handleOtpComplete = React.useCallback(
+    async (code: string) => {
+      setOtpStatus("verifying")
+      setError(null)
+      try {
+        const result = await onVerifyOtp({ methodId, code, method: otpMethod })
+        setAuthResult(result)
+        setOtpStatus("verified")
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Verification failed")
+        setOtpStatus("error")
+      }
+    },
+    [methodId, otpMethod, onVerifyOtp]
+  )
+
+  const handleOtpResend = React.useCallback(() => {
     setError(null)
-    try {
-      const result = await onVerifyOtp({ methodId, code, method: otpMethod })
-      onAuthSuccess(result)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Verification failed")
-    } finally {
-      setIsLoading(false)
-    }
-  }, [otpCode, methodId, otpMethod, onVerifyOtp, onAuthSuccess])
+    if (otpMethod === "phone") handleSendPhoneOtp()
+    else handleSendEmailOtp()
+  }, [otpMethod, handleSendPhoneOtp, handleSendEmailOtp])
 
-  const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) {
-      const digits = value.replace(/\D/g, "").slice(0, 6).split("")
-      const newOtp = [...otpCode]
-      digits.forEach((d, i) => {
-        if (index + i < 6) newOtp[index + i] = d
-      })
-      setOtpCode(newOtp)
-      const nextIndex = Math.min(index + digits.length, 5)
-      otpInputRefs.current[nextIndex]?.focus()
-      return
-    }
-    const newOtp = [...otpCode]
-    newOtp[index] = value.replace(/\D/g, "")
-    setOtpCode(newOtp)
-    if (value && index < 5) {
-      otpInputRefs.current[index + 1]?.focus()
-    }
-  }
+  const handleVerifiedComplete = React.useCallback(() => {
+    if (authResult) onAuthSuccess(authResult)
+  }, [authResult, onAuthSuccess])
 
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === "Backspace" && !otpCode[index] && index > 0) {
-      otpInputRefs.current[index - 1]?.focus()
-    }
-  }
+  const contactDisplay =
+    otpMethod === "phone"
+      ? `Code sent to ${obfuscatePhone(countryCode, phoneNumber)}`
+      : `Code sent to ${obfuscateEmail(email)}`
 
   return (
     <div className="max-w-[90%] rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
@@ -145,6 +129,7 @@ export function HiveInlineAuth({
           <button
             onClick={() => {
               setError(null)
+              setOtpStatus("idle")
               setStep(
                 step === "verify-otp"
                   ? otpMethod === "phone"
@@ -166,7 +151,7 @@ export function HiveInlineAuth({
       </div>
 
       <div className="px-4 py-3.5">
-        {error && (
+        {step !== "verify-otp" && error && (
           <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2 mb-3">{error}</p>
         )}
 
@@ -259,59 +244,16 @@ export function HiveInlineAuth({
         )}
 
         {step === "verify-otp" && (
-          <div className="space-y-2.5">
-            <p className="text-xs text-gray-500">
-              Code sent to{" "}
-              <span className="font-medium text-gray-700">
-                {otpMethod === "phone" ? `${countryCode} ${phoneNumber}` : email}
-              </span>
-            </p>
-
-            <div className="flex gap-1.5 justify-center">
-              {otpCode.map((digit, i) => (
-                <input
-                  key={i}
-                  ref={(el) => {
-                    otpInputRefs.current[i] = el
-                  }}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  value={digit}
-                  onChange={(e) => handleOtpChange(i, e.target.value)}
-                  onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                  className="w-9 h-10 text-center text-base font-semibold border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400"
-                />
-              ))}
-            </div>
-
-            <button
-              onClick={handleVerifyOtp}
-              disabled={isLoading || otpCode.join("").length !== 6}
-              className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Verifying...
-                </>
-              ) : (
-                "Verify"
-              )}
-            </button>
-
-            <button
-              onClick={() => {
-                setOtpCode(["", "", "", "", "", ""])
-                setError(null)
-                if (otpMethod === "phone") handleSendPhoneOtp()
-                else handleSendEmailOtp()
-              }}
-              disabled={isLoading}
-              className="w-full text-xs text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50"
-            >
-              Resend code
-            </button>
-          </div>
+          <OtpInput
+            status={otpStatus}
+            error={error}
+            onComplete={handleOtpComplete}
+            onResend={handleOtpResend}
+            contactDisplay={contactDisplay}
+            size="sm"
+            verifiedLabel="Signed in"
+            onVerifiedComplete={handleVerifiedComplete}
+          />
         )}
       </div>
     </div>
