@@ -10,12 +10,29 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    if: github.event.release.target_commitish == 'main'
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - name: Wait for @bagdock/hive on npm
+        run: |
+          RANGE=$(jq -r '.dependencies["@bagdock/hive"]' package.json)
+          echo "Waiting for @bagdock/hive@${RANGE} on npm..."
+          for i in $(seq 1 30); do
+            if npm view "@bagdock/hive@${RANGE}" version >/dev/null 2>&1; then
+              echo "Found @bagdock/hive matching ${RANGE}"
+              exit 0
+            fi
+            echo "Attempt ${i}/30 — not available yet, waiting 10s..."
+            sleep 10
+          done
+          echo "::error::Timed out waiting for @bagdock/hive@${RANGE} on npm"
+          exit 1
+
       - run: bun install
       - run: bunx tsup src/index.ts --format cjs,esm --dts --clean --external react --external react-dom
       - run: npx npm@latest publish --provenance --access public
