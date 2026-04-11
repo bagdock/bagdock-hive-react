@@ -63,7 +63,7 @@ export function HiveProvider({
   return (
     <HiveContext.Provider value={value}>
       {style ? (
-        <div className="hive-root" style={style}>
+        <div className="hive-root" style={{ ...style, display: "contents" }}>
           {children}
         </div>
       ) : (
