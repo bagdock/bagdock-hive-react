@@ -3,14 +3,21 @@
 import * as React from "react"
 import {
   Calendar,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
   CreditCard,
   Crown,
+  MapPin,
   Package,
+  Search,
   Share2,
+  Star,
   User,
 } from "lucide-react"
 
-import { cn } from "./utils"
+import { cn, currencySymbol as getCurrencySymbol } from "./utils"
+import type { SearchFacility, FacilityUnit } from "./types"
 
 export function AgentRentalsToolCard({ data }: { data: Record<string, unknown> }) {
   const rentals = (data?.rentals ?? data?.bookings ?? []) as Array<Record<string, unknown>>
@@ -248,10 +255,326 @@ export function AccountProfileCard({ data }: { data: Record<string, unknown> }) 
   )
 }
 
-export function defaultRenderToolResult(toolName: string, output: unknown): React.ReactNode | null {
+// ============================================================================
+// FACILITY CHIP (compact name pill)
+// ============================================================================
+
+function FacilityChip({
+  name,
+  onClick,
+}: {
+  name: string
+  onClick?: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[var(--hive-color-surface,#f3f4f6)] border border-[var(--hive-color-border,#e5e7eb)] hover:border-[var(--hive-color-border-hover,#d1d5db)] text-xs font-medium text-[var(--hive-color-text,#374151)] transition-colors"
+    >
+      <MapPin className="w-3 h-3 text-[var(--hive-color-text-secondary,#9ca3af)] flex-shrink-0" />
+      <span className="truncate max-w-[140px]">{name}</span>
+    </button>
+  )
+}
+
+// ============================================================================
+// FACILITY CARD (detailed view for search results)
+// ============================================================================
+
+const UNIT_PILL_LIMIT = 3
+const INITIAL_CARD_LIMIT = 3
+
+function FacilityCardInline({
+  facility,
+  currSym,
+  onDetails,
+  onSelectUnit,
+}: {
+  facility: SearchFacility
+  currSym: string
+  onDetails?: (name: string) => void
+  onSelectUnit?: (facilityName: string, unit: FacilityUnit) => void
+}) {
+  const [unitsExpanded, setUnitsExpanded] = React.useState(false)
+  const units = facility.units ?? []
+  const displayedUnits = unitsExpanded ? units : units.slice(0, UNIT_PILL_LIMIT)
+  const hasMoreUnits = units.length > UNIT_PILL_LIMIT
+  const price = facility.priceFrom ?? facility.price
+  const reviews = facility.totalReviews ?? facility.reviewCount
+
+  return (
+    <div className="border border-[var(--hive-color-border,#e5e7eb)] rounded-lg hover:border-[var(--hive-color-border-hover,#d1d5db)] transition-all overflow-hidden">
+      <div className="p-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-[var(--hive-color-text,#111827)] truncate">{facility.name}</p>
+            {facility.address && (
+              <div className="flex items-center gap-1 mt-0.5">
+                <MapPin className="w-3 h-3 text-[var(--hive-color-text-secondary,#9ca3af)] flex-shrink-0" />
+                <span className="text-xs text-[var(--hive-color-text-secondary,#6b7280)] truncate">{facility.address}</span>
+              </div>
+            )}
+          </div>
+          {price != null && (
+            <div className="text-right flex-shrink-0">
+              <p className="text-sm font-bold text-[var(--hive-color-text,#111827)]">{currSym}{price.toFixed(0)}</p>
+              <p className="text-[10px] text-[var(--hive-color-text-secondary,#9ca3af)]">/mo</p>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center justify-between mt-1.5">
+          {facility.rating != null && facility.rating > 0 && (
+            <div className="flex items-center gap-1">
+              <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+              <span className="text-xs font-medium text-[var(--hive-color-text,#374151)]">{facility.rating.toFixed(1)}</span>
+              {reviews != null && (
+                <span className="text-xs text-[var(--hive-color-text-secondary,#9ca3af)]">({reviews})</span>
+              )}
+            </div>
+          )}
+          <button
+            onClick={() => onDetails?.(facility.name)}
+            className="flex items-center gap-0.5 text-xs font-medium text-[var(--hive-color-text-secondary,#6b7280)] hover:text-[var(--hive-color-text,#374151)] transition-colors"
+          >
+            Full details
+            <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+      </div>
+
+      {units.length > 0 && (
+        <div className="border-t border-[var(--hive-color-border,#e5e7eb)] px-3 py-2 bg-[var(--hive-color-surface,#f9fafb)]">
+          <button
+            onClick={() => setUnitsExpanded(!unitsExpanded)}
+            className="flex items-center gap-1 text-[11px] font-medium text-[var(--hive-color-text-secondary,#6b7280)] mb-1.5 hover:text-[var(--hive-color-text,#374151)] transition-colors"
+          >
+            {units.length} unit size{units.length !== 1 ? "s" : ""} available
+            {hasMoreUnits && (
+              unitsExpanded
+                ? <ChevronUp className="w-3 h-3" />
+                : <ChevronDown className="w-3 h-3" />
+            )}
+          </button>
+          <div className="flex flex-wrap gap-1.5">
+            {displayedUnits.map((unit) => (
+              <button
+                key={unit.size}
+                onClick={() => onSelectUnit?.(facility.name, unit)}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--hive-color-surface-user,#ffffff)] border border-[var(--hive-color-border,#e5e7eb)] hover:border-[var(--hive-color-border-hover,#d1d5db)] text-[11px] font-medium text-[var(--hive-color-text,#374151)] transition-colors"
+              >
+                <span>{unit.size}</span>
+                <span className="text-[var(--hive-color-text-secondary,#9ca3af)]">&middot;</span>
+                <span className="text-[var(--hive-color-text,#111827)]">{currSym}{unit.price.toFixed(0)}/mo</span>
+              </button>
+            ))}
+            {hasMoreUnits && !unitsExpanded && (
+              <button
+                onClick={() => setUnitsExpanded(true)}
+                className="inline-flex items-center px-2 py-1 rounded-full bg-[var(--hive-color-surface-user,#ffffff)] border border-dashed border-[var(--hive-color-border,#d1d5db)] text-[11px] text-[var(--hive-color-text-secondary,#9ca3af)] hover:text-[var(--hive-color-text,#374151)] transition-colors"
+              >
+                +{units.length - UNIT_PILL_LIMIT} more
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ============================================================================
+// SEARCH RESULTS CARD (default rendering for searchFacilities)
+// ============================================================================
+
+interface SearchResultsOutput {
+  facilities?: Array<Record<string, unknown>>
+  city?: string
+  total?: number
+}
+
+function parseFacility(raw: Record<string, unknown>): SearchFacility {
+  const units = (raw.units as Array<Record<string, unknown>> | undefined)?.map((u) => ({
+    size: String(u.size ?? u.sizeDescription ?? ""),
+    sqft: Number(u.sqft ?? u.sizeSqft ?? 0),
+    price: Number(u.price ?? u.pricePerMonth ?? 0),
+  })) ?? []
+
+  return {
+    id: String(raw.id ?? ""),
+    name: String(raw.name ?? ""),
+    address: raw.address as string | undefined,
+    city: raw.city as string | undefined,
+    priceFrom: typeof raw.priceFrom === "number" ? raw.priceFrom : undefined,
+    price: typeof raw.price === "number" ? raw.price : undefined,
+    currency: (raw.currency as string) ?? "GBP",
+    rating: typeof raw.rating === "number" ? raw.rating : undefined,
+    totalReviews: typeof raw.totalReviews === "number" ? raw.totalReviews : undefined,
+    reviewCount: typeof raw.reviewCount === "number" ? raw.reviewCount : undefined,
+    features: raw.features as string[] | undefined,
+    units,
+    unitCount: typeof raw.unitCount === "number" ? raw.unitCount : units.length,
+  }
+}
+
+export function SearchResultsCard({
+  data,
+  onSendMessage,
+}: {
+  data: Record<string, unknown>
+  onSendMessage?: (msg: string) => void
+}) {
+  const [expanded, setExpanded] = React.useState(false)
+  const output = data as SearchResultsOutput
+  const rawFacilities = output.facilities ?? []
+  const facilities = rawFacilities.map((f) => parseFacility(f as Record<string, unknown>))
+  const city = output.city
+
+  if (facilities.length === 0) return null
+
+  const lowestPrice = Math.min(
+    ...facilities.map((f) => f.priceFrom ?? f.price ?? Infinity),
+  )
+  const currSym = getCurrencySymbol(facilities[0]?.currency ?? "GBP")
+
+  const displayed = expanded ? facilities : facilities.slice(0, INITIAL_CARD_LIMIT)
+  const hasMore = facilities.length > INITIAL_CARD_LIMIT
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-1.5 text-xs text-[var(--hive-color-text-secondary,#6b7280)]">
+        <Search className="w-3 h-3" />
+        <span>
+          <span className="font-medium text-[var(--hive-color-text,#374151)]">{facilities.length}</span>
+          {" "}facilit{facilities.length === 1 ? "y" : "ies"}
+          {city ? ` in ${city}` : ""}
+          {lowestPrice < Infinity && (
+            <> from <span className="font-medium text-[var(--hive-color-text,#374151)]">{currSym}{lowestPrice.toFixed(0)}/mo</span></>
+          )}
+        </span>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5">
+        {facilities.slice(0, 5).map((f) => (
+          <FacilityChip
+            key={f.id}
+            name={f.name}
+            onClick={() => onSendMessage?.(`Tell me more about ${f.name}`)}
+          />
+        ))}
+      </div>
+
+      <div className="space-y-2">
+        {displayed.map((f) => (
+          <FacilityCardInline
+            key={f.id}
+            facility={f}
+            currSym={currSym}
+            onDetails={(name) => onSendMessage?.(`Tell me more about ${name}`)}
+            onSelectUnit={(name, unit) => onSendMessage?.(`I'd like the ${unit.size} unit at ${name}`)}
+          />
+        ))}
+      </div>
+
+      {hasMore && !expanded && (
+        <button
+          onClick={() => setExpanded(true)}
+          className="flex items-center gap-1 w-full justify-center py-2 text-xs font-medium text-[var(--hive-color-text-secondary,#6b7280)] hover:text-[var(--hive-color-text,#374151)] hover:bg-[var(--hive-color-surface,#f9fafb)] rounded-lg transition-colors"
+        >
+          <ChevronDown className="w-3.5 h-3.5" />
+          Show {facilities.length - INITIAL_CARD_LIMIT} more
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ============================================================================
+// FACILITY DETAIL CARD (default rendering for selectFacility / openPreview)
+// ============================================================================
+
+export function FacilityDetailCard({ data }: { data: Record<string, unknown> }) {
+  const raw = (data.facility ?? data) as Record<string, unknown> | null
+  if (!raw || !raw.name) return null
+
+  const name = String(raw.name)
+  const address = raw.address as string | undefined
+  const price = typeof raw.priceFrom === "number"
+    ? raw.priceFrom
+    : typeof raw.price === "number"
+      ? raw.price
+      : typeof raw.base_price === "number"
+        ? raw.base_price / 100
+        : null
+  const currency = (raw.currency as string) ?? "GBP"
+  const currSym = getCurrencySymbol(currency)
+  const rating = typeof raw.rating === "number" ? raw.rating : null
+  const reviews = typeof raw.totalReviews === "number"
+    ? raw.totalReviews
+    : typeof raw.reviewCount === "number"
+      ? raw.reviewCount
+      : null
+  const features = (raw.features as string[] | undefined) ?? []
+
+  return (
+    <div className="border border-[var(--hive-color-border,#e5e7eb)] rounded-lg overflow-hidden">
+      <div className="p-3">
+        <p className="text-sm font-semibold text-[var(--hive-color-text,#111827)]">{name}</p>
+        {address && (
+          <div className="flex items-center gap-1 mt-0.5">
+            <MapPin className="w-3 h-3 text-[var(--hive-color-text-secondary,#9ca3af)] flex-shrink-0" />
+            <span className="text-xs text-[var(--hive-color-text-secondary,#6b7280)]">{String(address)}</span>
+          </div>
+        )}
+        <div className="flex items-center gap-3 mt-1.5">
+          {price != null && (
+            <span className="text-sm font-bold text-[var(--hive-color-text,#111827)]">
+              {currSym}{price.toFixed(0)}<span className="text-xs font-normal text-[var(--hive-color-text-secondary,#6b7280)]">/mo</span>
+            </span>
+          )}
+          {rating != null && rating > 0 && (
+            <div className="flex items-center gap-1">
+              <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+              <span className="text-xs font-medium text-[var(--hive-color-text,#374151)]">{rating.toFixed(1)}</span>
+              {reviews != null && (
+                <span className="text-xs text-[var(--hive-color-text-secondary,#9ca3af)]">({reviews})</span>
+              )}
+            </div>
+          )}
+        </div>
+        {features.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {features.slice(0, 6).map((f) => (
+              <span
+                key={f}
+                className="px-2 py-0.5 rounded-full bg-[var(--hive-color-surface,#f3f4f6)] text-[10px] font-medium text-[var(--hive-color-text-secondary,#6b7280)]"
+              >
+                {f}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// DEFAULT TOOL RESULT RENDERER
+// ============================================================================
+
+export function defaultRenderToolResult(
+  toolName: string,
+  output: unknown,
+  onSendMessage?: (msg: string) => void,
+): React.ReactNode | null {
   const data = (output ?? {}) as Record<string, unknown>
 
   switch (toolName) {
+    case "searchFacilities":
+      return <SearchResultsCard data={data} onSendMessage={onSendMessage} />
+    case "selectFacility":
+    case "openPreview":
+      return <FacilityDetailCard data={data} />
     case "getMyRentals":
       return <AgentRentalsToolCard data={data} />
     case "getMyPaymentMethods":

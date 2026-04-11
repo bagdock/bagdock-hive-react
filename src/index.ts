@@ -13,6 +13,7 @@ export type {
   HistorySession,
   DashboardRole,
   SearchFacility,
+  FacilityUnit,
   PricingPlan,
   AddOn,
   ProtectionPlan,
@@ -54,6 +55,8 @@ export {
   DashboardSummaryCard,
   LoyaltyCard,
   AccountProfileCard,
+  SearchResultsCard,
+  FacilityDetailCard,
   defaultRenderToolResult,
 } from "./tool-cards"
 
