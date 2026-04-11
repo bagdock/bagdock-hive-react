@@ -26,6 +26,7 @@ export interface UseHiveChatReturn {
   error: string | null
   sessionId: string | null
   currentAgent: string | null
+  showBranding: boolean
   sendMessage: (text: string) => void
   clearMessages: () => void
   setMessages: React.Dispatch<React.SetStateAction<AIMessage[]>>
@@ -64,6 +65,7 @@ export function useHiveChat({
   const [error, setError] = React.useState<string | null>(null)
   const [sessionId, setSessionId] = React.useState<string | null>(null)
   const [currentAgent, setCurrentAgent] = React.useState<string | null>(null)
+  const [showBranding, setShowBranding] = React.useState(true)
 
   const resolvedBaseUrl = React.useMemo(() => {
     if (baseUrl) return baseUrl
@@ -158,6 +160,9 @@ export function useHiveChat({
               if (mm?.currentAgent && typeof mm.currentAgent === "string") {
                 setCurrentAgent(mm.currentAgent)
                 onAgentChange?.(mm.currentAgent)
+              }
+              if (typeof mm?.showBranding === "boolean") {
+                setShowBranding(mm.showBranding)
               }
               if (mm?.routing) {
                 metadata = { ...metadata, routing: mm.routing as AIMessageMetadata["routing"] }
@@ -284,6 +289,7 @@ export function useHiveChat({
               if (meta.currentAgent && typeof meta.currentAgent === "string") {
                 setCurrentAgent(meta.currentAgent); onAgentChange?.(meta.currentAgent)
               }
+              if (typeof meta.showBranding === "boolean") { setShowBranding(meta.showBranding) }
               if (meta.routing) { metadata = { ...metadata, routing: meta.routing as AIMessageMetadata["routing"] } }
               return true
             } catch { /* skip */ }
@@ -346,6 +352,7 @@ export function useHiveChat({
     error,
     sessionId,
     currentAgent,
+    showBranding,
     sendMessage,
     clearMessages,
     setMessages,
