@@ -171,7 +171,7 @@ export function OtpInput({
   }
 
   return (
-    <div className={`space-y-${isSmall ? "2.5" : "4"}`}>
+    <div className={isSmall ? "space-y-2.5" : "space-y-4"}>
       {contactDisplay && (
         <p className={`${isSmall ? "text-xs" : "text-sm"} text-gray-500`}>
           {contactDisplay}
@@ -241,6 +241,7 @@ export function obfuscateEmail(email: string): string {
   if (atIdx < 0) return email
   const local = email.slice(0, atIdx)
   const domain = email.slice(atIdx)
-  if (local.length <= 2) return email
+  if (local.length <= 1) return `*${domain}`
+  if (local.length === 2) return `${local[0]}*${domain}`
   return `${local[0]}${"*".repeat(Math.min(local.length - 2, 6))}${local.slice(-1)}${domain}`
 }

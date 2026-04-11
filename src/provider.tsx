@@ -27,9 +27,21 @@ export function HiveProvider({
   children,
   ...config
 }: HiveProviderConfig & { children: React.ReactNode }) {
+  const [prefersDark, setPrefersDark] = React.useState(false)
+
+  React.useEffect(() => {
+    if (config.appearance?.theme !== "auto") return
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return
+    const mq = window.matchMedia("(prefers-color-scheme: dark)")
+    const sync = () => setPrefersDark(mq.matches)
+    sync()
+    mq.addEventListener("change", sync)
+    return () => mq.removeEventListener("change", sync)
+  }, [config.appearance?.theme])
+
   const resolved = React.useMemo(
-    () => config.appearance ? resolveTheme(config.appearance) : undefined,
-    [config.appearance],
+    () => config.appearance ? resolveTheme(config.appearance, prefersDark) : undefined,
+    [config.appearance, prefersDark],
   )
 
   const style = React.useMemo(

@@ -291,36 +291,38 @@ export function useHiveChat({
           return false
         }
 
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-
-          const chunk = decoder.decode(value, { stream: true })
-          sseBuffer += chunk
-
-          // Split SSE events on double newline
-          const eventBlocks = sseBuffer.split("\n\n")
-          sseBuffer = eventBlocks.pop() || ""
+        const processEventBlocks = (flush = false) => {
+          const eventBlocks = sseBuffer.split(/\r?\n\r?\n/)
+          sseBuffer = flush ? "" : (eventBlocks.pop() || "")
 
           for (const block of eventBlocks) {
-            const lines = block.split("\n").filter(Boolean)
+            if (!block.trim()) continue
+            const lines = block.split(/\r?\n/).filter(Boolean)
             for (const line of lines) {
-              // UI Message Stream Protocol: "data: {...}"
               if (line.startsWith("data: ")) {
                 const payload = line.slice(6)
                 if (payload === "[DONE]") continue
                 try {
-                  const data = JSON.parse(payload) as Record<string, unknown>
-                  handleEvent(data)
+                  handleEvent(JSON.parse(payload) as Record<string, unknown>)
                 } catch {
                   /* unparseable SSE data */
                 }
                 continue
               }
-              // Legacy Data Stream Protocol: "0:", "8:", "9:", "a:"
               handleLegacyLine(line)
             }
           }
+        }
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) {
+            processEventBlocks(true)
+            break
+          }
+
+          sseBuffer += decoder.decode(value, { stream: true })
+          processEventBlocks()
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Something went wrong")
