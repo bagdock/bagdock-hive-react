@@ -88,19 +88,29 @@ export type DashboardRole =
   | "facility_manager"
   | "admin"
 
+export interface FacilityUnit {
+  size: string
+  sqft: number
+  price: number
+}
+
 export interface SearchFacility {
   id: string
   name: string
   address?: string
   city?: string
   price?: number
+  priceFrom?: number
   currency?: string
   rating?: number
   reviewCount?: number
+  totalReviews?: number
   latitude?: number
   longitude?: number
   imageUrl?: string
   features?: string[]
+  units?: FacilityUnit[]
+  unitCount?: number
 }
 
 export interface PricingPlan {

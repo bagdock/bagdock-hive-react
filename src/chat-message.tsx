@@ -106,7 +106,7 @@ export function ChatMessage({ message, onSendMessage, renderToolResult }: ChatMe
 
               const toolResultNode =
                 renderToolResult?.(part.toolName, part.output, onSendMessage) ??
-                defaultRenderToolResult(part.toolName, part.output)
+                defaultRenderToolResult(part.toolName, part.output, onSendMessage)
               return (
                 <div key={`${message.id}-tool-${i}`} className="w-full max-w-[90%]">
                   <ToolExecutionStep toolName={part.toolName} state={part.state}>
