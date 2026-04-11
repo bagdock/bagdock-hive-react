@@ -124,6 +124,8 @@ export function useHiveChat({
         let metadata: AIMessageMetadata = {}
         const parts: AIMessagePart[] = []
         const assistantId = `ast_${Date.now()}`
+        let sseBuffer = ""
+        let currentTextId: string | null = null
 
         const upsertAssistant = () => {
           setMessages((prev) => {
@@ -145,15 +147,96 @@ export function useHiveChat({
           })
         }
 
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
+        const handleEvent = (data: Record<string, unknown>) => {
+          switch (data.type) {
+            case "start": {
+              const mm = data.messageMetadata as Record<string, unknown> | undefined
+              if (mm?.sessionId && typeof mm.sessionId === "string") {
+                setSessionId(mm.sessionId)
+                onSessionId?.(mm.sessionId)
+              }
+              if (mm?.currentAgent && typeof mm.currentAgent === "string") {
+                setCurrentAgent(mm.currentAgent)
+                onAgentChange?.(mm.currentAgent)
+              }
+              if (mm?.routing) {
+                metadata = { ...metadata, routing: mm.routing as AIMessageMetadata["routing"] }
+              }
+              break
+            }
+            case "text-start": {
+              currentTextId = (data.id as string) ?? null
+              break
+            }
+            case "text-delta": {
+              const deltaId = (data.id as string) ?? null
+              const delta = data.delta as string
+              assistantContent += delta
 
-          const chunk = decoder.decode(value, { stream: true })
-          const lines = chunk.split("\n").filter(Boolean)
+              let existingText: AIMessagePart | undefined
+              for (let j = parts.length - 1; j >= 0; j--) {
+                if (parts[j].type === "text" && (parts[j] as any)._textId === deltaId) {
+                  existingText = parts[j]
+                  break
+                }
+              }
+              if (existingText) {
+                existingText.text = (existingText.text ?? "") + delta
+              } else {
+                const newPart: AIMessagePart = { type: "text", text: delta }
+                ;(newPart as any)._textId = deltaId
+                parts.push(newPart)
+              }
+              upsertAssistant()
+              break
+            }
+            case "text-end": {
+              currentTextId = null
+              break
+            }
+            case "tool-input-available": {
+              const existing = parts.find(
+                (p) => p.type === "tool-invocation" && p.toolCallId === data.toolCallId,
+              )
+              if (existing) {
+                existing.args = data.input as Record<string, unknown>
+              } else {
+                parts.push({
+                  type: "tool-invocation",
+                  state: "call",
+                  toolCallId: data.toolCallId as string,
+                  toolName: data.toolName as string,
+                  args: data.input as Record<string, unknown>,
+                })
+              }
+              upsertAssistant()
+              break
+            }
+            case "tool-output-available": {
+              const existing = parts.find(
+                (p) => p.type === "tool-invocation" && p.toolCallId === data.toolCallId,
+              )
+              if (existing) {
+                existing.state = "result"
+                existing.output = data.output
+              } else {
+                parts.push({
+                  type: "tool-invocation",
+                  state: "result",
+                  toolCallId: data.toolCallId as string,
+                  output: data.output,
+                })
+              }
+              upsertAssistant()
+              break
+            }
+          }
+        }
 
-          for (const line of lines) {
-            if (line.startsWith("0:")) {
+        // Also handle legacy Data Stream Protocol prefixes (0:, 8:, 9:, a:)
+        const handleLegacyLine = (line: string): boolean => {
+          if (line.startsWith("0:")) {
+            try {
               const text = JSON.parse(line.slice(2)) as string
               assistantContent += text
               const existingText = parts.find((p) => p.type === "text")
@@ -163,78 +246,79 @@ export function useHiveChat({
                 parts.push({ type: "text", text: assistantContent })
               }
               upsertAssistant()
-            }
-
-            if (line.startsWith("9:")) {
-              try {
-                const call = JSON.parse(line.slice(2)) as {
-                  toolCallId: string
-                  toolName: string
-                  args: Record<string, unknown>
-                }
-                const existing = parts.find(
-                  (p) => p.type === "tool-invocation" && p.toolCallId === call.toolCallId,
-                )
-                if (existing) {
-                  existing.args = call.args
-                } else {
-                  parts.push({
-                    type: "tool-invocation",
-                    state: "call",
-                    toolCallId: call.toolCallId,
-                    toolName: call.toolName,
-                    args: call.args,
-                  })
-                }
-                upsertAssistant()
-              } catch {
-                /* malformed tool call line */
+              return true
+            } catch { /* skip */ }
+          }
+          if (line.startsWith("9:")) {
+            try {
+              const call = JSON.parse(line.slice(2)) as {
+                toolCallId: string; toolName: string; args: Record<string, unknown>
               }
-            }
-
-            if (line.startsWith("a:")) {
-              try {
-                const result = JSON.parse(line.slice(2)) as {
-                  toolCallId: string
-                  result: unknown
-                }
-                const existing = parts.find(
-                  (p) => p.type === "tool-invocation" && p.toolCallId === result.toolCallId,
-                )
-                if (existing) {
-                  existing.state = "result"
-                  existing.output = result.result
-                } else {
-                  parts.push({
-                    type: "tool-invocation",
-                    state: "result",
-                    toolCallId: result.toolCallId,
-                    output: result.result,
-                  })
-                }
-                upsertAssistant()
-              } catch {
-                /* malformed tool result line */
+              const existing = parts.find(
+                (p) => p.type === "tool-invocation" && p.toolCallId === call.toolCallId,
+              )
+              if (existing) { existing.args = call.args }
+              else { parts.push({ type: "tool-invocation", state: "call", toolCallId: call.toolCallId, toolName: call.toolName, args: call.args }) }
+              upsertAssistant()
+              return true
+            } catch { /* skip */ }
+          }
+          if (line.startsWith("a:")) {
+            try {
+              const result = JSON.parse(line.slice(2)) as { toolCallId: string; result: unknown }
+              const existing = parts.find(
+                (p) => p.type === "tool-invocation" && p.toolCallId === result.toolCallId,
+              )
+              if (existing) { existing.state = "result"; existing.output = result.result }
+              else { parts.push({ type: "tool-invocation", state: "result", toolCallId: result.toolCallId, output: result.result }) }
+              upsertAssistant()
+              return true
+            } catch { /* skip */ }
+          }
+          if (line.startsWith("8:")) {
+            try {
+              const meta = JSON.parse(line.slice(2)) as Record<string, unknown>
+              if (meta.sessionId && typeof meta.sessionId === "string") {
+                setSessionId(meta.sessionId); onSessionId?.(meta.sessionId)
               }
-            }
-
-            if (line.startsWith("8:")) {
-              try {
-                const meta = JSON.parse(line.slice(2)) as Record<string, unknown>
-                if (meta.sessionId && typeof meta.sessionId === "string") {
-                  setSessionId(meta.sessionId)
-                  onSessionId?.(meta.sessionId)
-                }
-                if (meta.currentAgent && typeof meta.currentAgent === "string") {
-                  setCurrentAgent(meta.currentAgent)
-                  onAgentChange?.(meta.currentAgent)
-                }
-                if (meta.routing) {
-                  metadata = { ...metadata, routing: meta.routing as AIMessageMetadata["routing"] }
-                }
-              } catch {
-                /* non-JSON metadata line */
+              if (meta.currentAgent && typeof meta.currentAgent === "string") {
+                setCurrentAgent(meta.currentAgent); onAgentChange?.(meta.currentAgent)
               }
+              if (meta.routing) { metadata = { ...metadata, routing: meta.routing as AIMessageMetadata["routing"] } }
+              return true
+            } catch { /* skip */ }
+          }
+          return false
+        }
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value, { stream: true })
+          sseBuffer += chunk
+
+          // Split SSE events on double newline
+          const eventBlocks = sseBuffer.split("\n\n")
+          sseBuffer = eventBlocks.pop() || ""
+
+          for (const block of eventBlocks) {
+            const lines = block.split("\n").filter(Boolean)
+            for (const line of lines) {
+              // UI Message Stream Protocol: "data: {...}"
+              if (line.startsWith("data: ")) {
+                const payload = line.slice(6)
+                if (payload === "[DONE]") continue
+                try {
+                  const data = JSON.parse(payload) as Record<string, unknown>
+                  handleEvent(data)
+                } catch {
+                  /* unparseable SSE data */
+                }
+                continue
+              }
+              // Legacy Data Stream Protocol: "0:", "8:", "9:", "a:"
+              handleLegacyLine(line)
             }
           }
         }

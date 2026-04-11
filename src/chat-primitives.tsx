@@ -198,20 +198,20 @@ export function ToolExecutionStep({
           <div
             className={cn(
               "w-4.5 h-4.5 rounded-full flex items-center justify-center flex-shrink-0",
-              error ? "bg-red-50" : "bg-gray-100",
+              error ? "bg-red-50" : "bg-[var(--hive-color-surface,#f3f4f6)]",
             )}
           >
             {error ? (
-              <AlertCircle className="w-3 h-3 text-red-400" />
+              <AlertCircle className="w-3 h-3 text-[var(--hive-color-danger,#dc2626)]" />
             ) : (
-              <Check className="w-3 h-3 text-gray-500" />
+              <Check className="w-3 h-3 text-[var(--hive-color-text-secondary,#6b7280)]" />
             )}
           </div>
         ) : (
-          <Loader2 className="w-4 h-4 text-gray-400 animate-spin flex-shrink-0" />
+          <Loader2 className="w-4 h-4 text-[var(--hive-color-text-secondary,#9ca3af)] animate-spin flex-shrink-0" />
         )}
-        <span className="text-xs font-medium text-gray-600">{label}</span>
-        <span className="text-[10px] text-gray-400 ml-auto">
+        <span className="text-xs font-medium text-[var(--hive-color-text-secondary,#4b5563)]">{label}</span>
+        <span className="text-[10px] text-[var(--hive-color-text-secondary,#9ca3af)] ml-auto">
           {done ? (error ? "Failed" : "Done") : "Working\u2026"}
         </span>
       </div>
@@ -245,10 +245,10 @@ export function QuickReplyChips({
           className={cn(
             "text-sm px-3.5 py-1.5 rounded-full border transition-all duration-200",
             picked === c.value
-              ? "bg-gray-900 text-white border-gray-900"
+              ? "bg-[var(--hive-color-primary,#111827)] text-white border-[var(--hive-color-primary,#111827)]"
               : isDisabled
-                ? "bg-white text-gray-300 border-gray-100 cursor-default"
-                : "bg-white text-gray-700 border-gray-200 hover:border-gray-400 hover:bg-gray-50 cursor-pointer",
+                ? "bg-[var(--hive-color-chip-bg,#ffffff)] text-[var(--hive-color-text-secondary,#d1d5db)] border-[var(--hive-color-border,#f3f4f6)] cursor-default opacity-50"
+                : "bg-[var(--hive-color-chip-bg,#ffffff)] text-[var(--hive-color-chip-text,#374151)] border-[var(--hive-color-chip-border,#e5e7eb)] hover:border-[var(--hive-color-text-secondary,#9ca3af)] cursor-pointer",
           )}
         >
           {c.label}
