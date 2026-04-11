@@ -105,6 +105,10 @@ export type { HivePostRentalCardProps } from "./post-rental-card"
 export { HiveCheckoutFlow, AgentCheckoutFlow } from "./checkout-flow"
 export type { HiveCheckoutFlowProps } from "./checkout-flow"
 
+// Theming
+export type { HiveAppearance, HiveThemeVariables, HiveElementStyles, ResolvedTheme } from "./themes/types"
+export { DEFAULT_THEME, DARK_THEME, resolveTheme, themeToStyle } from "./themes/types"
+
 // Provider & hooks
 export { HiveProvider, useHiveConfig } from "./provider"
 export type { HiveProviderConfig } from "./provider"

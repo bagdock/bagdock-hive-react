@@ -46,8 +46,8 @@ export function ChatMessage({ message, onSendMessage, renderToolResult }: ChatMe
                   className={cn(
                     "max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed",
                     isUser
-                      ? "bg-gray-100 text-gray-900 rounded-br-md"
-                      : "bg-white border border-gray-100 text-gray-900 rounded-bl-md shadow-sm",
+                      ? "bg-[var(--hive-color-surface-user,#f3f4f6)] text-[var(--hive-color-text-user,#111827)] rounded-br-md"
+                      : "bg-[var(--hive-color-surface,#f9fafb)] border border-[var(--hive-color-border,#e5e7eb)] text-[var(--hive-color-text,#111827)] rounded-bl-md shadow-[var(--hive-shadow,0_1px_3px_0_rgb(0_0_0/0.1))]",
                   )}
                 >
                   <ChatMarkdown content={part.text} />
@@ -60,9 +60,12 @@ export function ChatMessage({ message, onSendMessage, renderToolResult }: ChatMe
 
               if (part.toolName === "offerChoices" && isDone) {
                 const output = part.output as
-                  | { choices?: { label: string; value: string }[] }
+                  | { choices?: (string | { label: string; value: string })[] }
                   | undefined
-                const choices = output?.choices ?? []
+                const raw = output?.choices ?? []
+                const choices = raw.map((c) =>
+                  typeof c === "string" ? { label: c, value: c } : c,
+                )
                 if (choices.length > 0) {
                   return (
                     <QuickReplyChips
@@ -118,15 +121,15 @@ export function ChatMessage({ message, onSendMessage, renderToolResult }: ChatMe
           className={cn(
             "max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed",
             isUser
-              ? "bg-gray-100 text-gray-900 rounded-br-md"
-              : "bg-white border border-gray-100 text-gray-900 rounded-bl-md shadow-sm",
+              ? "bg-[var(--hive-color-surface-user,#f3f4f6)] text-[var(--hive-color-text-user,#111827)] rounded-br-md"
+              : "bg-[var(--hive-color-surface,#f9fafb)] border border-[var(--hive-color-border,#e5e7eb)] text-[var(--hive-color-text,#111827)] rounded-bl-md shadow-[var(--hive-shadow,0_1px_3px_0_rgb(0_0_0/0.1))]",
           )}
         >
           <ChatMarkdown content={message.content || ""} />
         </div>
       ) : !isUser && message.metadata?.routing ? (
-        <div className="max-w-[85%] px-4 py-3 bg-white border border-gray-100 rounded-2xl rounded-bl-md shadow-sm">
-          <div className="flex items-center gap-2 text-gray-400">
+        <div className="max-w-[85%] px-4 py-3 bg-[var(--hive-color-surface,#f9fafb)] border border-[var(--hive-color-border,#e5e7eb)] rounded-2xl rounded-bl-md shadow-[var(--hive-shadow,0_1px_3px_0_rgb(0_0_0/0.1))]">
+          <div className="flex items-center gap-2 text-[var(--hive-color-text-secondary,#6b7280)]">
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
             <span className="text-sm">Thinking...</span>
           </div>
@@ -134,7 +137,7 @@ export function ChatMessage({ message, onSendMessage, renderToolResult }: ChatMe
       ) : null}
 
       {message.timestamp && (
-        <span className="text-[10px] text-gray-300 px-2">
+        <span className="text-[10px] text-[var(--hive-color-text-secondary,#9ca3af)] px-2">
           {new Date(message.timestamp).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
@@ -148,8 +151,8 @@ export function ChatMessage({ message, onSendMessage, renderToolResult }: ChatMe
 export function LoadingMessage() {
   return (
     <div className="flex flex-col gap-1 items-start">
-      <div className="max-w-[85%] px-4 py-3 bg-white border border-gray-100 rounded-2xl rounded-bl-md shadow-sm">
-        <div className="flex items-center gap-2 text-gray-400">
+      <div className="max-w-[85%] px-4 py-3 bg-[var(--hive-color-surface,#f9fafb)] border border-[var(--hive-color-border,#e5e7eb)] rounded-2xl rounded-bl-md shadow-[var(--hive-shadow,0_1px_3px_0_rgb(0_0_0/0.1))]">
+        <div className="flex items-center gap-2 text-[var(--hive-color-text-secondary,#6b7280)]">
           <Loader2 className="w-3.5 h-3.5 animate-spin" />
           <span className="text-sm">Thinking...</span>
         </div>
