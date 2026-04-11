@@ -71,7 +71,10 @@ export function ChatMessage({ message, onSendMessage, renderToolResult }: ChatMe
                     <QuickReplyChips
                       key={`${message.id}-qr-${i}`}
                       choices={choices}
-                      onSelect={onSendMessage}
+                      onSelect={(val) => {
+                        const label = choices.find(c => c.value === val)?.label ?? val
+                        onSendMessage?.(label)
+                      }}
                     />
                   )
                 }
