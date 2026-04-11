@@ -128,9 +128,9 @@ const VAR_MAP: Record<keyof HiveThemeVariables, string> = {
   shadowLg: '--hive-shadow-lg',
 }
 
-export function resolveTheme(appearance?: HiveAppearance): ResolvedTheme {
+export function resolveTheme(appearance?: HiveAppearance, prefersDark?: boolean): ResolvedTheme {
   const isDark = appearance?.theme === 'dark' ||
-    (appearance?.theme === 'auto' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    (appearance?.theme === 'auto' && (prefersDark ?? false))
 
   const preset = isDark ? DARK_THEME : DEFAULT_THEME
   const variables: Required<HiveThemeVariables> = { ...preset, ...appearance?.variables }

@@ -387,7 +387,7 @@ const DEFAULT_PHONE_COUNTRY_CODES = [
 
 export interface SecurePhoneInputProps {
   reason?: string
-  onSubmit: (phone: string) => void
+  onSubmit: (phone: string) => void | Promise<void>
   defaultCountryCode?: string
   countryCodes?: { code: string; flag: string; name: string }[]
 }
@@ -401,43 +401,56 @@ export function SecurePhoneInput({
   const [countryCode, setCountryCode] = React.useState(defaultCountryCode)
   const [phoneNumber, setPhoneNumber] = React.useState("")
   const [submitted, setSubmitted] = React.useState(false)
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [submitError, setSubmitError] = React.useState<string | null>(null)
 
-  const handleSubmit = () => {
-    if (!phoneNumber.trim()) return
+  const handleSubmit = async () => {
+    if (!phoneNumber.trim() || isSubmitting) return
     const full = `${countryCode}${phoneNumber.replace(/\s/g, "")}`
-    setSubmitted(true)
-    onSubmit(full)
+    setIsSubmitting(true)
+    setSubmitError(null)
+    try {
+      await onSubmit(full)
+      setSubmitted(true)
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Failed to submit phone number")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (submitted) {
     return (
-      <div className="max-w-[90%] rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="max-w-[90%] rounded-2xl border border-[var(--hive-color-border,#e5e7eb)] bg-[var(--hive-color-surface,#ffffff)] shadow-[var(--hive-shadow,0_1px_3px_0_rgb(0_0_0/0.1))] overflow-hidden">
         <div className="px-4 py-4 flex items-center gap-2.5">
-          <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
-          <p className="text-sm text-gray-700">Phone number submitted</p>
+          <Check className="w-4 h-4 text-[var(--hive-color-success,#16a34a)] flex-shrink-0" />
+          <p className="text-sm text-[var(--hive-color-text,#374151)]">Phone number submitted</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-[90%] rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2.5">
-        <Lock className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+    <div className="max-w-[90%] rounded-2xl border border-[var(--hive-color-border,#e5e7eb)] bg-[var(--hive-color-surface,#ffffff)] shadow-[var(--hive-shadow,0_1px_3px_0_rgb(0_0_0/0.1))] overflow-hidden">
+      <div className="px-4 py-3 border-b border-[var(--hive-color-border,#f3f4f6)] flex items-center gap-2.5">
+        <Lock className="w-4 h-4 text-[var(--hive-color-primary,#4f46e5)] flex-shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900">Secure callback</p>
+          <p className="text-sm font-semibold text-[var(--hive-color-text,#111827)]">Secure callback</p>
           {reason && (
-            <p className="text-xs text-gray-500 mt-0.5">{reason}</p>
+            <p className="text-xs text-[var(--hive-color-text-secondary,#6b7280)] mt-0.5">{reason}</p>
           )}
         </div>
       </div>
 
       <div className="px-4 py-3.5 space-y-2.5">
+        {submitError && (
+          <p className="text-xs text-[var(--hive-color-danger,#dc2626)]">{submitError}</p>
+        )}
         <div className="flex gap-2">
           <select
             value={countryCode}
             onChange={(e) => setCountryCode(e.target.value)}
-            className="w-20 px-2 py-2 rounded-lg border border-gray-200 text-xs text-gray-700 focus:outline-none focus:border-gray-300 bg-white"
+            className="w-20 px-2 py-2 rounded-lg border border-[var(--hive-color-border,#e5e7eb)] text-xs text-[var(--hive-color-text,#374151)] focus:outline-none bg-[var(--hive-color-bg,#ffffff)]"
           >
             {countryCodes.map((c) => (
               <option key={c.code} value={c.code}>
@@ -451,20 +464,24 @@ export function SecurePhoneInput({
             onChange={(e) => setPhoneNumber(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
             placeholder="Phone number"
-            className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-300"
+            className="flex-1 px-3 py-2 rounded-lg border border-[var(--hive-color-border,#e5e7eb)] text-sm text-[var(--hive-color-text,#111827)] placeholder:text-[var(--hive-color-text-secondary,#9ca3af)] focus:outline-none bg-[var(--hive-color-bg,#ffffff)]"
           />
         </div>
 
         <button
           onClick={handleSubmit}
-          disabled={!phoneNumber.trim()}
-          className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+          disabled={!phoneNumber.trim() || isSubmitting}
+          className="w-full py-2.5 bg-[var(--hive-color-primary,#4f46e5)] hover:bg-[var(--hive-color-primary-hover,#4338ca)] disabled:opacity-40 text-white text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
         >
-          <Phone className="w-3.5 h-3.5" />
-          Confirm number
+          {isSubmitting ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Phone className="w-3.5 h-3.5" />
+          )}
+          {isSubmitting ? "Submitting..." : "Confirm number"}
         </button>
 
-        <p className="text-[10px] text-gray-400 text-center leading-relaxed">
+        <p className="text-[10px] text-[var(--hive-color-text-secondary,#9ca3af)] text-center leading-relaxed">
           Your number is shared only with the operator for this callback.
         </p>
       </div>
