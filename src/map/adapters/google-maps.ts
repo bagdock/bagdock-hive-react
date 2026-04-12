@@ -8,18 +8,20 @@ export interface GoogleMapsAdapterOptions {
 }
 
 interface GMapsInstance extends MapInstance {
-  _map: google.maps.Map
-  _markers: google.maps.marker.AdvancedMarkerElement[]
+  _map: unknown
+  _markers: unknown[]
   _listeners: Array<() => void>
-  _facilityMap: Map<string, google.maps.marker.AdvancedMarkerElement>
+  _facilityMap: Map<string, unknown>
 }
+
+declare const google: any
 
 export function googleMapsAdapter(
   options: GoogleMapsAdapterOptions,
 ): HiveMapAdapter<GoogleMapsAdapterOptions> {
-  let loaderPromise: Promise<typeof google.maps> | null = null
+  let loaderPromise: Promise<any> | null = null
 
-  function loadApi(): Promise<typeof google.maps> {
+  function loadApi(): Promise<any> {
     if (loaderPromise) return loaderPromise
     loaderPromise = new Promise((resolve, reject) => {
       if (typeof google !== "undefined" && google.maps) {
@@ -64,7 +66,7 @@ export function googleMapsAdapter(
 
     setFacilities(instance, facilities, _appearance) {
       const inst = instance as GMapsInstance
-      for (const m of inst._markers) m.map = null
+      for (const m of inst._markers as Array<{ map: unknown }>) m.map = null
       inst._markers = []
       inst._facilityMap.clear()
 
@@ -106,13 +108,13 @@ export function googleMapsAdapter(
           count++
         }
       }
-      if (count > 0) inst._map.fitBounds(bounds, padding)
+      if (count > 0) (inst._map as any).fitBounds(bounds, padding)
     },
 
     setSelected(instance, facilityId) {
       const inst = instance as GMapsInstance
       for (const [id, marker] of inst._facilityMap) {
-        const el = marker.content as HTMLElement | null
+        const el = (marker as any).content as HTMLElement | null
         if (!el) continue
         const isSelected = id === facilityId
         el.style.transform = isSelected ? "scale(1.15)" : "scale(1)"
@@ -125,11 +127,11 @@ export function googleMapsAdapter(
       const unsubs: Array<() => void> = []
 
       for (const [id, marker] of inst._facilityMap) {
-        const listener = marker.addListener("click", () => cb(id))
+        const listener = (marker as any).addListener("click", () => cb(id))
         unsubs.push(() => google.maps.event.removeListener(listener))
       }
 
-      inst._listeners.push(...unsubs.map((u) => u))
+      inst._listeners.push(...unsubs.map((u: () => void) => u))
       return () => {
         for (const u of unsubs) u()
       }
