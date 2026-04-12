@@ -12,6 +12,7 @@ interface GMapsInstance extends MapInstance {
   _markers: unknown[]
   _listeners: Array<() => void>
   _facilityMap: Map<string, unknown>
+  _selectCb: ((id: string) => void) | null
 }
 
 declare const google: any
@@ -57,6 +58,7 @@ export function googleMapsAdapter(
         _markers: [],
         _listeners: [],
         _facilityMap: new Map(),
+        _selectCb: null,
         getNativeMap: () => map,
         destroy: () => {
           // Google Maps doesn't have a destroy method; clear markers
@@ -64,11 +66,13 @@ export function googleMapsAdapter(
       }
     },
 
-    setFacilities(instance, facilities, _appearance) {
+    setFacilities(instance, facilities, appearance) {
       const inst = instance as GMapsInstance
       for (const m of inst._markers as Array<{ map: unknown }>) m.map = null
       inst._markers = []
       inst._facilityMap.clear()
+
+      const pin = appearance?.pin
 
       for (const fac of facilities) {
         if (fac.latitude == null || fac.longitude == null) continue
@@ -77,14 +81,19 @@ export function googleMapsAdapter(
         const price = fac.priceFrom ?? fac.price
         content.textContent = price != null ? `${fac.currency ?? "$"}${price}` : fac.name
         Object.assign(content.style, {
-          background: "#fff",
-          border: "2px solid #e5e7eb",
-          borderRadius: "9999px",
-          padding: "4px 10px",
-          fontSize: "13px",
-          fontWeight: "600",
+          background: pin?.backgroundColor ?? "#fff",
+          border: `${pin?.borderWidth ?? 2}px solid ${pin?.borderColor ?? "#e5e7eb"}`,
+          borderRadius: typeof pin?.borderRadius === "number"
+            ? `${pin.borderRadius}px`
+            : (pin?.borderRadius ?? "9999px"),
+          padding: pin?.padding ?? "4px 10px",
+          fontFamily: pin?.fontFamily ?? "inherit",
+          fontSize: typeof pin?.fontSize === "number" ? `${pin.fontSize}px` : (pin?.fontSize ?? "13px"),
+          fontWeight: String(pin?.fontWeight ?? 600),
           cursor: "pointer",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+          boxShadow: pin?.shadow ?? "0 2px 6px rgba(0,0,0,0.15)",
+          whiteSpace: "nowrap",
+          transition: "transform 0.15s ease, background-color 0.15s ease",
         })
 
         const marker = new google.maps.marker.AdvancedMarkerElement({
@@ -92,6 +101,11 @@ export function googleMapsAdapter(
           position: { lat: fac.latitude, lng: fac.longitude },
           content,
         })
+
+        if (inst._selectCb) {
+          const id = fac.id
+          marker.addListener("click", () => inst._selectCb!(id))
+        }
 
         inst._markers.push(marker)
         inst._facilityMap.set(fac.id, marker)
@@ -113,17 +127,28 @@ export function googleMapsAdapter(
 
     setSelected(instance, facilityId) {
       const inst = instance as GMapsInstance
+      const pin = undefined as MapAppearance["pin"] | undefined
       for (const [id, marker] of inst._facilityMap) {
         const el = (marker as any).content as HTMLElement | null
         if (!el) continue
         const isSelected = id === facilityId
-        el.style.transform = isSelected ? "scale(1.15)" : "scale(1)"
+        el.style.transform = isSelected ? `scale(${pin?.selectedScale ?? 1.15})` : "scale(1)"
         el.style.zIndex = isSelected ? "10" : "1"
+        el.style.backgroundColor = isSelected
+          ? (pin?.selectedBackgroundColor ?? "#111827")
+          : (pin?.backgroundColor ?? "#fff")
+        el.style.color = isSelected
+          ? (pin?.selectedColor ?? "#fff")
+          : (pin?.color ?? "#111827")
+        el.style.borderColor = isSelected
+          ? (pin?.selectedBorderColor ?? "#111827")
+          : (pin?.borderColor ?? "#e5e7eb")
       }
     },
 
     onSelect(instance, cb) {
       const inst = instance as GMapsInstance
+      inst._selectCb = cb
       const unsubs: Array<() => void> = []
 
       for (const [id, marker] of inst._facilityMap) {
@@ -131,8 +156,9 @@ export function googleMapsAdapter(
         unsubs.push(() => google.maps.event.removeListener(listener))
       }
 
-      inst._listeners.push(...unsubs.map((u: () => void) => u))
+      inst._listeners.push(...unsubs)
       return () => {
+        inst._selectCb = null
         for (const u of unsubs) u()
       }
     },

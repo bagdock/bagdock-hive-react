@@ -8,9 +8,11 @@ export interface MapboxAdapterOptions {
 }
 
 interface MapboxMapInstance extends MapInstance {
-  _map: unknown
-  _markers: unknown[]
+  _map: InstanceType<typeof import("mapbox-gl").Map>
+  _markers: Array<InstanceType<typeof import("mapbox-gl").Marker> & { _facilityId: string }>
   _listeners: Array<() => void>
+  _mapboxgl: typeof import("mapbox-gl")
+  _selectCb: ((id: string) => void) | null
 }
 
 function createPinElement(
@@ -20,17 +22,16 @@ function createPinElement(
 ): HTMLElement {
   const el = document.createElement("div")
   const pin = appearance?.pin
-  const isSelected = selected
 
   Object.assign(el.style, {
-    backgroundColor: isSelected
+    backgroundColor: selected
       ? (pin?.selectedBackgroundColor ?? "#111827")
       : (pin?.backgroundColor ?? "#ffffff"),
-    color: isSelected
+    color: selected
       ? (pin?.selectedColor ?? "#ffffff")
       : (pin?.color ?? "#111827"),
     border: `${pin?.borderWidth ?? 2}px solid ${
-      isSelected ? (pin?.selectedBorderColor ?? "#111827") : (pin?.borderColor ?? "#e5e7eb")
+      selected ? (pin?.selectedBorderColor ?? "#111827") : (pin?.borderColor ?? "#e5e7eb")
     }`,
     borderRadius: typeof pin?.borderRadius === "number"
       ? `${pin.borderRadius}px`
@@ -43,8 +44,8 @@ function createPinElement(
     cursor: "pointer",
     whiteSpace: "nowrap",
     transition: "transform 0.15s ease, background-color 0.15s ease",
-    transform: isSelected ? `scale(${pin?.selectedScale ?? 1.15})` : "scale(1)",
-    zIndex: isSelected ? "10" : "1",
+    transform: selected ? `scale(${pin?.selectedScale ?? 1.15})` : "scale(1)",
+    zIndex: selected ? "10" : "1",
   })
 
   const price = facility.priceFrom ?? facility.price
@@ -77,55 +78,56 @@ export function mapboxAdapter(options: MapboxAdapterOptions): HiveMapAdapter<Map
         _map: map,
         _markers: [],
         _listeners: [],
+        _mapboxgl: mapboxgl,
+        _selectCb: null,
         getNativeMap: () => map,
         destroy: () => map.remove(),
-      }
+      } as unknown as MapboxMapInstance
     },
 
     setFacilities(instance, facilities, appearance) {
-      const inst = instance as MapboxMapInstance
-      const map = inst._map as { _markers?: unknown[] }
+      const inst = instance as unknown as MapboxMapInstance
 
-      for (const marker of inst._markers as Array<{ remove(): void }>) {
-        marker.remove()
-      }
+      for (const marker of inst._markers) marker.remove()
       inst._markers = []
 
-      void import("mapbox-gl").then((mapboxgl) => {
-        for (const fac of facilities) {
-          if (fac.latitude == null || fac.longitude == null) continue
-          const el = createPinElement(fac, appearance)
-          const marker = new mapboxgl.Marker({ element: el })
-            .setLngLat([fac.longitude, fac.latitude])
-            .addTo(inst._map as InstanceType<typeof mapboxgl.Map>)
-          ;(marker as unknown as { _facilityId: string })._facilityId = fac.id
-          ;(inst._markers as unknown[]).push(marker)
+      const mapboxgl = inst._mapboxgl
+
+      for (const fac of facilities) {
+        if (fac.latitude == null || fac.longitude == null) continue
+        const el = createPinElement(fac, appearance)
+        const marker = new mapboxgl.Marker({ element: el })
+          .setLngLat([fac.longitude, fac.latitude])
+          .addTo(inst._map) as InstanceType<typeof mapboxgl.Marker> & { _facilityId: string }
+        marker._facilityId = fac.id
+
+        if (inst._selectCb) {
+          const id = fac.id
+          const cb = inst._selectCb
+          el.addEventListener("click", () => cb(id))
         }
-      })
+
+        inst._markers.push(marker)
+      }
     },
 
     fitBounds(instance, facilities, padding = 60) {
-      void import("mapbox-gl").then((mapboxgl) => {
-        const inst = instance as MapboxMapInstance
-        const map = inst._map as InstanceType<typeof mapboxgl.Map>
+      const inst = instance as unknown as MapboxMapInstance
+      const mapboxgl = inst._mapboxgl
 
-        const coords = facilities.filter((f) => f.latitude != null && f.longitude != null)
-        if (coords.length === 0) return
+      const coords = facilities.filter((f) => f.latitude != null && f.longitude != null)
+      if (coords.length === 0) return
 
-        const bounds = new mapboxgl.LngLatBounds()
-        for (const f of coords) {
-          bounds.extend([f.longitude, f.latitude])
-        }
-        map.fitBounds(bounds, { padding, maxZoom: 15 })
-      })
+      const bounds = new mapboxgl.LngLatBounds()
+      for (const f of coords) {
+        bounds.extend([f.longitude, f.latitude])
+      }
+      inst._map.fitBounds(bounds, { padding, maxZoom: 15 })
     },
 
     setSelected(instance, facilityId) {
-      const inst = instance as MapboxMapInstance
-      for (const marker of inst._markers as Array<{
-        getElement(): HTMLElement
-        _facilityId: string
-      }>) {
+      const inst = instance as unknown as MapboxMapInstance
+      for (const marker of inst._markers) {
         const el = marker.getElement()
         const isSelected = marker._facilityId === facilityId
         el.style.transform = isSelected ? "scale(1.15)" : "scale(1)"
@@ -134,22 +136,19 @@ export function mapboxAdapter(options: MapboxAdapterOptions): HiveMapAdapter<Map
     },
 
     onSelect(instance, cb) {
-      const inst = instance as MapboxMapInstance
+      const inst = instance as unknown as MapboxMapInstance
+      inst._selectCb = cb
 
-      const handler = (marker: { _facilityId: string; getElement(): HTMLElement }) => {
+      const handler = (marker: MapboxMapInstance["_markers"][number]) => {
         const listener = () => cb(marker._facilityId)
         marker.getElement().addEventListener("click", listener)
         inst._listeners.push(() => marker.getElement().removeEventListener("click", listener))
       }
 
-      for (const marker of inst._markers as Array<{
-        _facilityId: string
-        getElement(): HTMLElement
-      }>) {
-        handler(marker)
-      }
+      for (const marker of inst._markers) handler(marker)
 
       return () => {
+        inst._selectCb = null
         for (const unsub of inst._listeners) unsub()
         inst._listeners = []
       }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useCallback } from "react"
-import type { HiveMapViewProps, MapInstance } from "./types"
+import type { HiveMapViewProps, MapInstance, MapFacility, MapAppearance } from "./types"
 
 const DEFAULT_CENTER: [number, number] = [-73.985, 40.748]
 const DEFAULT_ZOOM = 12
@@ -25,6 +25,19 @@ export function HiveMapView<TNativeOptions = Record<string, unknown>>({
   const instanceRef = useRef<MapInstance | null>(null)
   const unsubRef = useRef<(() => void) | null>(null)
 
+  const facilitiesRef = useRef(facilities)
+  facilitiesRef.current = facilities
+  const appearanceRef = useRef(appearance)
+  appearanceRef.current = appearance
+  const selectedIdRef = useRef(selectedId)
+  selectedIdRef.current = selectedId
+  const autoFitRef = useRef(autoFitBounds)
+  autoFitRef.current = autoFitBounds
+  const fitPaddingRef = useRef(fitBoundsPadding)
+  fitPaddingRef.current = fitBoundsPadding
+  const onSelectRef = useRef(onSelect)
+  onSelectRef.current = onSelect
+
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
@@ -40,17 +53,17 @@ export function HiveMapView<TNativeOptions = Record<string, unknown>>({
         }
         instanceRef.current = inst
 
-        adapter.setFacilities(inst, facilities, appearance)
+        adapter.setFacilities(inst, facilitiesRef.current, appearanceRef.current)
 
-        if (autoFitBounds && facilities.length > 1) {
-          adapter.fitBounds(inst, facilities, fitBoundsPadding)
+        if (autoFitRef.current && facilitiesRef.current.length > 1) {
+          adapter.fitBounds(inst, facilitiesRef.current, fitPaddingRef.current)
         }
 
-        if (selectedId) {
-          adapter.setSelected(inst, selectedId)
+        if (selectedIdRef.current) {
+          adapter.setSelected(inst, selectedIdRef.current)
         }
 
-        unsubRef.current = adapter.onSelect(inst, (id) => onSelect?.(id))
+        unsubRef.current = adapter.onSelect(inst, (id) => onSelectRef.current?.(id))
       })
 
     return () => {
@@ -60,17 +73,21 @@ export function HiveMapView<TNativeOptions = Record<string, unknown>>({
       instanceRef.current?.destroy()
       instanceRef.current = null
     }
-    // Only re-init when adapter or container-level options change
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adapter])
 
   useEffect(() => {
     const inst = instanceRef.current
     if (!inst) return
+
     adapter.setFacilities(inst, facilities, appearance)
+
     if (autoFitBounds && facilities.length > 1) {
       adapter.fitBounds(inst, facilities, fitBoundsPadding)
     }
+
+    unsubRef.current?.()
+    unsubRef.current = adapter.onSelect(inst, (id) => onSelectRef.current?.(id))
   }, [adapter, facilities, appearance, autoFitBounds, fitBoundsPadding])
 
   useEffect(() => {
@@ -78,18 +95,6 @@ export function HiveMapView<TNativeOptions = Record<string, unknown>>({
     if (!inst) return
     adapter.setSelected(inst, selectedId ?? null)
   }, [adapter, selectedId])
-
-  const handleSelect = useCallback(
-    (id: string) => onSelect?.(id),
-    [onSelect],
-  )
-
-  useEffect(() => {
-    const inst = instanceRef.current
-    if (!inst) return
-    unsubRef.current?.()
-    unsubRef.current = adapter.onSelect(inst, handleSelect)
-  }, [adapter, handleSelect])
 
   const containerStyle: React.CSSProperties = {
     width: "100%",
