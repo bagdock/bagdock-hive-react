@@ -62,10 +62,14 @@ export function ChatMessage({ message, onSendMessage, renderToolResult }: ChatMe
                 const output = part.output as
                   | { choices?: (string | { label: string; value: string })[] }
                   | undefined
-                const raw = output?.choices ?? []
-                const choices = raw.map((c) =>
-                  typeof c === "string" ? { label: c, value: c } : c,
-                )
+                const raw = output?.choices
+                const choices = Array.isArray(raw)
+                  ? raw.flatMap((c) => {
+                      if (typeof c === "string") return [{ label: c, value: c }]
+                      if (c && typeof c === "object" && typeof c.label === "string" && typeof c.value === "string") return [c]
+                      return []
+                    })
+                  : []
                 if (choices.length > 0) {
                   return (
                     <QuickReplyChips
@@ -140,7 +144,7 @@ export function ChatMessage({ message, onSendMessage, renderToolResult }: ChatMe
       ) : null}
 
       {message.timestamp && (
-        <span className="text-[10px] text-[var(--hive-color-text-secondary,#9ca3af)] px-2">
+        <span className="text-[10px] text-[var(--hive-color-text-secondary,#6b7280)] px-2">
           {new Date(message.timestamp).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",

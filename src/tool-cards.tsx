@@ -393,11 +393,14 @@ interface SearchResultsOutput {
 }
 
 function parseFacility(raw: Record<string, unknown>): SearchFacility {
-  const units = (raw.units as Array<Record<string, unknown>> | undefined)?.map((u) => ({
-    size: String(u.size ?? u.sizeDescription ?? ""),
-    sqft: Number(u.sqft ?? u.sizeSqft ?? 0),
-    price: Number(u.price ?? u.pricePerMonth ?? 0),
-  })) ?? []
+  const units = Array.isArray(raw.units)
+    ? (raw.units as Array<Record<string, unknown>>).flatMap((u) => {
+        const size = String(u.size ?? u.sizeDescription ?? "").trim()
+        const price = Number(u.price ?? u.pricePerMonth)
+        if (!size || !Number.isFinite(price)) return []
+        return [{ size, sqft: Number(u.sqft ?? u.sizeSqft ?? 0), price }]
+      })
+    : []
 
   return {
     id: String(raw.id ?? ""),
@@ -425,8 +428,12 @@ export function SearchResultsCard({
 }) {
   const [expanded, setExpanded] = React.useState(false)
   const output = data as SearchResultsOutput
-  const rawFacilities = output.facilities ?? []
-  const facilities = rawFacilities.map((f) => parseFacility(f as Record<string, unknown>))
+  const rawFacilities = Array.isArray(output.facilities) ? output.facilities : []
+  const facilities = rawFacilities.flatMap((f) =>
+    f && typeof f === "object" && !Array.isArray(f)
+      ? [parseFacility(f as Record<string, unknown>)]
+      : [],
+  )
   const city = output.city
 
   if (facilities.length === 0) return null

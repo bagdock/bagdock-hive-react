@@ -129,7 +129,6 @@ export function useHiveChat({
         const parts: AIMessagePart[] = []
         const assistantId = `ast_${Date.now()}`
         let sseBuffer = ""
-        let currentTextId: string | null = null
 
         const upsertAssistant = () => {
           setMessages((prev) => {
@@ -172,7 +171,6 @@ export function useHiveChat({
               break
             }
             case "text-start": {
-              currentTextId = (data.id as string) ?? null
               break
             }
             case "text-delta": {
@@ -198,7 +196,6 @@ export function useHiveChat({
               break
             }
             case "text-end": {
-              currentTextId = null
               break
             }
             case "tool-input-available": {
@@ -231,6 +228,7 @@ export function useHiveChat({
                   type: "tool-invocation",
                   state: "result",
                   toolCallId: data.toolCallId as string,
+                  toolName: (data.toolName as string) ?? "unknown",
                   output: data.output,
                 })
               }
