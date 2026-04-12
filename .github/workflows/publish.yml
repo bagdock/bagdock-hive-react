@@ -34,5 +34,5 @@ jobs:
           exit 1
 
       - run: bun install
-      - run: bunx tsup src/index.ts --format cjs,esm --dts --clean --external react --external react-dom
+      - run: bun run build
       - run: npx npm@latest publish --provenance --access public
