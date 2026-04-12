@@ -7,7 +7,7 @@ import type { HiveAppearance, ResolvedTheme } from "./themes/types"
 import { resolveTheme, themeToStyle } from "./themes/types"
 
 export interface HiveProviderConfig {
-  /** Clerk/Stripe-style appearance prop for theming all chat primitives */
+  /** Appearance prop for theming all chat primitives */
   appearance?: HiveAppearance
   /** Custom renderer for tool results -- takes precedence over built-in cards */
   renderToolResult?: ToolResultRenderer

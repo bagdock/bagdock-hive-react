@@ -195,7 +195,39 @@ function App() {
 }
 ```
 
-### 4. Full-page agent experience
+### 4. With server-side auth proxy
+
+If your auth uses httpOnly cookies (e.g. Stytch session tokens), the JWT is not accessible to client-side JavaScript. Instead of passing an `apiKey` to `useHiveChat`, point `useChat` from the AI SDK at a local proxy route that handles authentication server-side.
+
+```tsx
+import { useChat } from '@ai-sdk/react'
+import { DefaultChatTransport } from 'ai'
+import { HiveProvider, ChatMessage, LoadingMessage, Composer } from '@bagdock/hive-react'
+
+function Chat() {
+  const transport = useMemo(
+    () => new DefaultChatTransport({ api: '/api/hive/stream' }),
+    [],
+  )
+  const { messages, sendMessage, status } = useChat({ transport })
+  const isLoading = status === 'submitted' || status === 'streaming'
+
+  return (
+    <HiveProvider appearance={{ theme: 'light', variables: { colorPrimary: '#4f46e5' } }}>
+      <div>
+        {messages.map((msg) => (
+          <ChatMessage key={msg.id} message={msg} onSendMessage={sendMessage} />
+        ))}
+        {isLoading && <LoadingMessage />}
+      </div>
+    </HiveProvider>
+  )
+}
+```
+
+> **Note:** `useHiveChat({ apiKey })` is for **client-side auth only** (Clerk, Auth0, Firebase). When using httpOnly cookies, the proxy pattern replaces both the transport and key management. The embed key stays server-side as a regular env var (not `NEXT_PUBLIC_`).
+
+### 5. Full-page agent experience
 
 Pre-built full-page layout with header, message list, composer, and tool rendering.
 
