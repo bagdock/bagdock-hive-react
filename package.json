@@ -16,18 +16,34 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts --clean --external react --external react-dom --external lucide-react",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external react --external react-dom --external lucide-react",
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean --external react --external react-dom --external lucide-react --external mapbox-gl --external @maptiler/sdk --external maplibre-gl --external radar-sdk-js",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external react --external react-dom --external lucide-react --external mapbox-gl --external @maptiler/sdk --external maplibre-gl --external radar-sdk-js",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0",
-    "lucide-react": ">=0.300.0"
+    "lucide-react": ">=0.300.0",
+    "mapbox-gl": ">=2.0.0",
+    "@maptiler/sdk": ">=2.0.0",
+    "maplibre-gl": ">=3.0.0",
+    "radar-sdk-js": ">=4.0.0"
   },
   "peerDependenciesMeta": {
     "lucide-react": {
       "optional": false
+    },
+    "mapbox-gl": {
+      "optional": true
+    },
+    "@maptiler/sdk": {
+      "optional": true
+    },
+    "maplibre-gl": {
+      "optional": true
+    },
+    "radar-sdk-js": {
+      "optional": true
     }
   },
   "dependencies": {
