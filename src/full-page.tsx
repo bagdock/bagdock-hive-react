@@ -28,6 +28,7 @@ export interface HiveFullPageProps {
   onClose?: () => void
   className?: string
   renderToolResult?: ToolResultRenderer
+  showBranding?: boolean
 }
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -52,6 +53,7 @@ export function HiveFullPage({
   onClose,
   className,
   renderToolResult,
+  showBranding,
 }: HiveFullPageProps) {
   const [input, setInput] = React.useState("")
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
@@ -185,6 +187,7 @@ export function HiveFullPage({
               onKeyDown={handleKeyDown}
               isLoading={isLoading}
               inputRef={inputRef}
+              showBranding={showBranding}
               className="rounded-2xl border border-gray-200 shadow-sm focus-within:border-gray-300 focus-within:shadow"
             />
           </div>

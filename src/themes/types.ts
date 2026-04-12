@@ -139,11 +139,11 @@ export function resolveTheme(appearance?: HiveAppearance, prefersDark?: boolean)
   return { variables, elements, isDark }
 }
 
-export function themeToStyle(variables: Required<HiveThemeVariables>): React.CSSProperties {
+export function themeToStyle(variables: Required<HiveThemeVariables>): Record<string, string> {
   const style: Record<string, string> = {}
   for (const [key, cssVar] of Object.entries(VAR_MAP)) {
     const value = variables[key as keyof HiveThemeVariables]
     if (value) style[cssVar] = value
   }
-  return style as React.CSSProperties
+  return style
 }

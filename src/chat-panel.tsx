@@ -42,6 +42,7 @@ export interface HiveChatPanelProps {
   botAvatarUrl?: string
   className?: string
   renderToolResult?: ToolResultRenderer
+  showBranding?: boolean
 }
 
 const DEFAULT_SUGGESTIONS: AIAssistantSuggestion[] = [
@@ -63,6 +64,7 @@ export function HiveChatPanel({
   onNewChat,
   className,
   renderToolResult,
+  showBranding,
 }: HiveChatPanelProps) {
   const [input, setInput] = React.useState("")
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
@@ -229,6 +231,7 @@ export function HiveChatPanel({
           onKeyDown={handleKeyDown}
           isLoading={isLoading}
           inputRef={inputRef}
+          showBranding={showBranding}
         />
       </div>
     </>
