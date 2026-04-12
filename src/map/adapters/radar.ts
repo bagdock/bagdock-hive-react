@@ -11,6 +11,7 @@ interface RadarInstance extends MapInstance {
   _map: unknown
   _markers: unknown[]
   _listeners: Array<() => void>
+  _selectCb: ((id: string) => void) | null
 }
 
 export function radarAdapter(
@@ -49,6 +50,7 @@ export function radarAdapter(
         _map: map,
         _markers: [],
         _listeners: [],
+        _selectCb: null,
         getNativeMap: () => map,
         destroy: () => {
           try {
@@ -102,6 +104,13 @@ export function radarAdapter(
         })
 
         ;(marker as { _facilityId?: string })._facilityId = fac.id
+
+        if (inst._selectCb) {
+          const id = fac.id
+          const cb = inst._selectCb
+          el.addEventListener("click", () => cb(id))
+        }
+
         ;(inst._markers as unknown[]).push(marker)
       }
     },
@@ -145,6 +154,7 @@ export function radarAdapter(
 
     onSelect(instance, cb) {
       const inst = instance as RadarInstance
+      inst._selectCb = cb
       const unsubs: Array<() => void> = []
 
       for (const marker of inst._markers as Array<{
@@ -161,6 +171,7 @@ export function radarAdapter(
 
       inst._listeners.push(...unsubs)
       return () => {
+        inst._selectCb = null
         for (const u of unsubs) u()
       }
     },

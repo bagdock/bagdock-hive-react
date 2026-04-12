@@ -200,6 +200,7 @@ function App() {
 If your auth uses httpOnly cookies (e.g. Stytch session tokens), the JWT is not accessible to client-side JavaScript. Instead of passing an `apiKey` to `useHiveChat`, point `useChat` from the AI SDK at a local proxy route that handles authentication server-side.
 
 ```tsx
+import { useMemo } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { HiveProvider, ChatMessage, LoadingMessage, Composer } from '@bagdock/hive-react'
@@ -247,7 +248,7 @@ function CoraPage() {
 }
 ```
 
-### 5. Operator dashboard integration
+### 6. Operator dashboard integration
 
 Embed the AI assistant into an operator dashboard with context-aware suggestions and inline hints.
 
@@ -288,7 +289,7 @@ function OperatorDashboard() {
 }
 ```
 
-### 6. Complete checkout flow
+### 7. Complete checkout flow
 
 Multi-step checkout wizard with injectable callbacks for Stripe, identity verification, and protection plans.
 
