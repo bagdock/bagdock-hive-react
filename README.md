@@ -25,6 +25,18 @@ React components and hooks for embedding Bagdock Hive — AI chat with streaming
 npm install @bagdock/hive-react @bagdock/hive react react-dom lucide-react
 ```
 
+```bash
+yarn add @bagdock/hive-react @bagdock/hive react react-dom lucide-react
+```
+
+```bash
+pnpm add @bagdock/hive-react @bagdock/hive react react-dom lucide-react
+```
+
+```bash
+bun add @bagdock/hive-react @bagdock/hive react react-dom lucide-react
+```
+
 **Peer dependencies:** `react >= 18`, `react-dom >= 18`, `lucide-react >= 0.300`
 
 ## How it fits together
@@ -298,6 +310,49 @@ function Checkout({ facility, unit }) {
 
 ---
 
+## Appearance theming
+
+Style all Hive components with a declarative `appearance` prop. Supports light, dark, and auto (system) presets with custom variable overrides.
+
+```tsx
+import { HiveProvider, DARK_THEME } from '@bagdock/hive-react'
+
+function App() {
+  return (
+    <HiveProvider
+      apiKey="ek_live_..."
+      appearance={{ theme: 'dark' }}
+    >
+      <ChatPage />
+    </HiveProvider>
+  )
+}
+```
+
+Custom variable overrides:
+
+```tsx
+<HiveProvider
+  apiKey="ek_live_..."
+  appearance={{
+    theme: 'light',
+    variables: {
+      colorPrimary: '#0ea5e9',
+      colorSurface: '#f0f9ff',
+      fontFamily: '"Inter", sans-serif',
+    },
+  }}
+>
+```
+
+Available theme variables: `colorPrimary`, `colorBackground`, `colorSurface`, `colorSurfaceUser`, `colorText`, `colorTextSecondary`, `colorBorder`, `colorSuccess`, `colorDanger`, `colorChipBg`, `colorChipText`, `colorCodeBg`, `fontFamily`, `fontFamilyMono`, `borderRadius`, `shadow`, and more.
+
+## PII scrubbing
+
+User messages are automatically scrubbed for PII before leaving the browser via `@bagdock/pii-patterns` — defense-in-depth redaction of emails, SSNs, phone numbers, IBANs, and 11 more patterns. Server-side WASM scrubbing remains authoritative.
+
+---
+
 ## Component reference
 
 ### Hooks
@@ -327,7 +382,8 @@ function Checkout({ facility, unit }) {
 | `error` | `string \| null` | Last error message |
 | `sessionId` | `string \| null` | Resolved session ID |
 | `currentAgent` | `string \| null` | Active agent context |
-| `sendMessage` | `(text: string) => void` | Send a user message |
+| `showBranding` | `boolean` | Whether to show "powered by Bagdock" (controlled by plan) |
+| `sendMessage` | `(text: string) => void` | Send a user message (auto-scrubs PII) |
 | `clearMessages` | `() => void` | Reset the conversation |
 | `setMessages` | `Dispatch<SetStateAction>` | Direct state access |
 
@@ -348,6 +404,8 @@ function Checkout({ facility, unit }) {
 
 | Component | Tool | Description |
 |-----------|------|-------------|
+| `SearchResultsCard` | `searchFacilities` | Facility list with chips, unit pills, and pricing |
+| `FacilityDetailCard` | `selectFacility` / `openPreview` | Detailed facility preview with features |
 | `AgentRentalsToolCard` | `getMyRentals` | List of active rentals |
 | `PaymentSummaryCard` | `getMyNextPayment` | Upcoming payment details |
 | `DashboardSummaryCard` | `getDashboardSummary` | Account overview |
@@ -376,6 +434,19 @@ function Checkout({ facility, unit }) {
 | `HiveHistoryPanel` | Chat session history list |
 | `HiveInlineAuth` | Phone/email OTP authentication card |
 | `HivePostRentalCard` | Confirmation card after checkout |
+| `SecurePhoneInput` | Secure phone capture with country code picker |
+| `OtpInput` | OTP verification input with resend cooldown and paste handling |
+
+### Utility exports
+
+| Export | Description |
+|--------|-------------|
+| `obfuscatePhone(countryCode, number)` | Mask a phone number for display (e.g. `+44 ****1234`) |
+| `obfuscateEmail(email)` | Mask an email for display (e.g. `j****n@example.com`) |
+| `DEFAULT_THEME` | Default light theme variables |
+| `DARK_THEME` | Dark theme preset |
+| `resolveTheme(appearance)` | Resolve appearance config to a full theme |
+| `themeToStyle(variables)` | Convert theme variables to CSS custom properties |
 
 ### Backward compatibility
 
@@ -434,7 +505,7 @@ interface AIMessagePart {
 
 ## Styling
 
-Components use Tailwind CSS classes. Include the package in your Tailwind `content` config:
+Components use Tailwind CSS with CSS custom properties (`--hive-*`) for theming. Include the package in your Tailwind `content` config:
 
 ```javascript
 // tailwind.config.js
@@ -445,6 +516,8 @@ module.exports = {
   ],
 }
 ```
+
+All components fall back to sensible defaults when no `HiveProvider` is present, so they work out-of-the-box without theming configuration.
 
 ## License
 
