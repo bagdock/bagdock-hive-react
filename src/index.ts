@@ -118,3 +118,24 @@ export type { HiveProviderConfig } from "./provider"
 
 export { useHiveChat } from "./use-hive-chat"
 export type { UseHiveChatConfig, UseHiveChatReturn } from "./use-hive-chat"
+
+// Map — provider-agnostic facility map
+export {
+  HiveMapView,
+  mapboxAdapter,
+  googleMapsAdapter,
+  maptilerAdapter,
+  stadiaAdapter,
+  radarAdapter,
+} from "./map"
+export type {
+  HiveMapAdapter,
+  HiveMapViewProps,
+  MapFacility,
+  MapAppearance,
+  MapboxAdapterOptions,
+  GoogleMapsAdapterOptions,
+  MapTilerAdapterOptions,
+  StadiaAdapterOptions,
+  RadarAdapterOptions,
+} from "./map"
