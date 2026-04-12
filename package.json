@@ -1,6 +1,6 @@
 {
   "name": "@bagdock/hive-react",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Bagdock Hive React SDK — embeddable AI chat, rental, and access widgets for self-storage",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -31,7 +31,8 @@
     }
   },
   "dependencies": {
-    "@bagdock/hive": "^0.2.0",
+    "@bagdock/hive": "^0.3.0",
+    "@bagdock/pii-patterns": "^0.1.0",
     "clsx": "^2.1.0",
     "tailwind-merge": "^2.2.0"
   },
