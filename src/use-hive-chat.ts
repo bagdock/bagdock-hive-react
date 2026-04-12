@@ -4,6 +4,7 @@ import * as React from "react"
 
 import type { AIMessage, AIMessageMetadata, AIMessagePart } from "./types"
 import { useHiveConfig } from "./provider"
+import { scrubPii } from "@bagdock/pii-patterns"
 
 export interface UseHiveChatConfig {
   /** Hive API key (embed key or restricted key) */
@@ -81,10 +82,11 @@ export function useHiveChat({
 
   const sendMessage = React.useCallback(
     async (text: string) => {
+      const scrubbedText = scrubPii(text)
       const userMsg: AIMessage = {
         id: `usr_${Date.now()}`,
         role: "user",
-        content: text,
+        content: scrubbedText,
         timestamp: new Date().toISOString(),
       }
 
