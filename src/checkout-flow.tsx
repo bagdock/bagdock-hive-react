@@ -785,10 +785,10 @@ export function HiveCheckoutFlow({
                           {plan.name}
                           {plan.isRecommended && <span className="ml-1.5 text-[10px] font-semibold text-indigo-600 bg-indigo-100 px-1.5 py-0.5 rounded-full">Recommended</span>}
                         </p>
-                        <p className="text-xs text-gray-500">Up to {currencySymbol}{plan.coverAmount.toLocaleString()} coverage</p>
+                        <p className="text-xs text-gray-500">Up to {currencySymbol}{(plan.coverAmount ?? 0).toLocaleString()} coverage</p>
                       </div>
                     </div>
-                    <span className="text-sm font-semibold text-gray-900">{currencySymbol}{plan.pricePerMonth}/mo</span>
+                    <span className="text-sm font-semibold text-gray-900">{currencySymbol}{(plan.pricePerMonth ?? 0)}/mo</span>
                   </button>
                 ))}
                 {selectedProtectionId && !hasOwnInsurance && (
@@ -828,7 +828,7 @@ export function HiveCheckoutFlow({
                               <p className="text-xs text-gray-500">{addon.description}</p>
                             </div>
                           </div>
-                          <span className="text-sm font-semibold text-gray-900">{currencySymbol}{addon.pricePerMonth}/mo</span>
+                          <span className="text-sm font-semibold text-gray-900">{currencySymbol}{(addon.pricePerMonth ?? 0)}/mo</span>
                         </button>
                       )
                     })}

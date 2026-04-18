@@ -1,6 +1,6 @@
 {
   "name": "@bagdock/hive-react",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Bagdock Hive React SDK — embeddable AI chat, rental, and access widgets for self-storage",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -10,14 +10,44 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
+    },
+    "./map": {
+      "types": "./dist/map.d.ts",
+      "import": "./dist/map.mjs",
+      "require": "./dist/map.js"
+    },
+    "./map/mapbox": {
+      "types": "./dist/map/mapbox.d.ts",
+      "import": "./dist/map/mapbox.mjs",
+      "require": "./dist/map/mapbox.js"
+    },
+    "./map/maptiler": {
+      "types": "./dist/map/maptiler.d.ts",
+      "import": "./dist/map/maptiler.mjs",
+      "require": "./dist/map/maptiler.js"
+    },
+    "./map/stadia": {
+      "types": "./dist/map/stadia.d.ts",
+      "import": "./dist/map/stadia.mjs",
+      "require": "./dist/map/stadia.js"
+    },
+    "./map/radar": {
+      "types": "./dist/map/radar.d.ts",
+      "import": "./dist/map/radar.mjs",
+      "require": "./dist/map/radar.js"
+    },
+    "./map/google": {
+      "types": "./dist/map/google.d.ts",
+      "import": "./dist/map/google.mjs",
+      "require": "./dist/map/google.js"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts --clean --external react --external react-dom --external lucide-react --external mapbox-gl --external @maptiler/sdk --external maplibre-gl --external radar-sdk-js",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external react --external react-dom --external lucide-react --external mapbox-gl --external @maptiler/sdk --external maplibre-gl --external radar-sdk-js",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
