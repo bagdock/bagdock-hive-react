@@ -405,8 +405,18 @@ function parseFacility(raw: Record<string, unknown>): SearchFacility {
   return {
     id: String(raw.id ?? ""),
     name: String(raw.name ?? ""),
-    address: raw.address as string | undefined,
-    city: raw.city as string | undefined,
+    address: typeof raw.address === "string"
+      ? raw.address
+      : raw.address && typeof raw.address === "object"
+        ? [
+            (raw.address as Record<string, unknown>).line1 ?? (raw.address as Record<string, unknown>).street,
+            (raw.address as Record<string, unknown>).city,
+            (raw.address as Record<string, unknown>).postcode,
+          ].filter(Boolean).join(", ")
+        : undefined,
+    city: (typeof raw.address === "object" && raw.address
+      ? (raw.address as Record<string, unknown>).city as string | undefined
+      : raw.city as string | undefined),
     priceFrom: typeof raw.priceFrom === "number" ? raw.priceFrom : undefined,
     price: typeof raw.price === "number" ? raw.price : undefined,
     currency: (raw.currency as string) ?? "GBP",
@@ -504,7 +514,15 @@ export function FacilityDetailCard({ data }: { data: Record<string, unknown> }) 
   if (!raw || !raw.name) return null
 
   const name = String(raw.name)
-  const address = raw.address as string | undefined
+  const address = typeof raw.address === "string"
+    ? raw.address
+    : raw.address && typeof raw.address === "object"
+      ? [
+          (raw.address as Record<string, unknown>).line1 ?? (raw.address as Record<string, unknown>).street,
+          (raw.address as Record<string, unknown>).city,
+          (raw.address as Record<string, unknown>).postcode,
+        ].filter(Boolean).join(", ")
+      : undefined
   const price = typeof raw.priceFrom === "number"
     ? raw.priceFrom
     : typeof raw.price === "number"
@@ -569,6 +587,333 @@ export function FacilityDetailCard({ data }: { data: Record<string, unknown> }) 
 // DEFAULT TOOL RESULT RENDERER
 // ============================================================================
 
+// ============================================================================
+// DatePickerCard — Agent tool card for move-in / move-out date selection
+// ============================================================================
+
+export function DatePickerCard({
+  suggestedMoveIn,
+  suggestedMoveOut,
+  onConfirm,
+}: {
+  suggestedMoveIn?: string | null
+  suggestedMoveOut?: string | null
+  onConfirm?: (dates: { moveIn: string; moveOut?: string | null }) => void
+}) {
+  const today = new Date()
+  const todayStr = today.toISOString().split("T")[0]!
+
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const tomorrowStr = tomorrow.toISOString().split("T")[0]!
+
+  const nextWeek = new Date(today)
+  nextWeek.setDate(nextWeek.getDate() + 7)
+  const nextWeekStr = nextWeek.toISOString().split("T")[0]!
+
+  const thisWeekend = (() => {
+    const d = new Date(today)
+    const day = d.getDay()
+    const daysUntilSat = (6 - day + 7) % 7 || 7
+    d.setDate(d.getDate() + daysUntilSat)
+    return d.toISOString().split("T")[0]!
+  })()
+
+  const [moveIn, setMoveIn] = React.useState<string>(suggestedMoveIn || todayStr)
+  const [moveOut, setMoveOut] = React.useState<string | null>(suggestedMoveOut || null)
+  const [moveOutMode, setMoveOutMode] = React.useState<"flexible" | "1month" | "3months" | "6months" | "12months" | "custom">(
+    suggestedMoveOut ? "custom" : "flexible",
+  )
+  const [calendarMonth, setCalendarMonth] = React.useState(new Date(suggestedMoveIn || todayStr))
+  const [selectingFor, setSelectingFor] = React.useState<"moveIn" | "moveOut">("moveIn")
+  const [confirmed, setConfirmed] = React.useState(false)
+
+  const moveInChips = [
+    { label: "Today", value: todayStr },
+    { label: "Tomorrow", value: tomorrowStr },
+    { label: "This wknd", value: thisWeekend },
+    { label: "Next week", value: nextWeekStr },
+  ]
+
+  const computeMoveOut = React.useCallback(
+    (mode: string, fromDate: string): string | null => {
+      if (mode === "flexible") return null
+      const d = new Date(fromDate)
+      if (mode === "1month") d.setMonth(d.getMonth() + 1)
+      else if (mode === "3months") d.setMonth(d.getMonth() + 3)
+      else if (mode === "6months") d.setMonth(d.getMonth() + 6)
+      else if (mode === "12months") d.setMonth(d.getMonth() + 12)
+      else return moveOut
+      return d.toISOString().split("T")[0]!
+    },
+    [moveOut],
+  )
+
+  const handleMoveOutModeChange = React.useCallback(
+    (mode: "flexible" | "1month" | "3months" | "6months" | "12months" | "custom") => {
+      setMoveOutMode(mode)
+      if (mode === "custom") {
+        setSelectingFor("moveOut")
+      } else {
+        setMoveOut(computeMoveOut(mode, moveIn))
+      }
+    },
+    [moveIn, computeMoveOut],
+  )
+
+  const daysInMonth = (yr: number, mo: number) => new Date(yr, mo + 1, 0).getDate()
+  const year = calendarMonth.getFullYear()
+  const month = calendarMonth.getMonth()
+  const monthYear = calendarMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })
+  const firstDayOfMonth = new Date(year, month, 1).getDay()
+  const adjustedFirstDay = (firstDayOfMonth + 6) % 7
+  const totalDays = daysInMonth(year, month)
+
+  const handleDayClick = (day: number) => {
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+    if (dateStr < todayStr) return
+    if (selectingFor === "moveIn") {
+      setMoveIn(dateStr)
+      if (moveOut && dateStr > moveOut) setMoveOut(null)
+    } else {
+      if (dateStr >= moveIn) {
+        setMoveOut(dateStr)
+        setMoveOutMode("custom")
+      }
+    }
+  }
+
+  const formatDate = (d: string) => {
+    const date = new Date(d + "T12:00:00")
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+  }
+
+  const accent = "var(--hive-color-accent,#4f46e5)"
+  const accentHover = "var(--hive-color-accent-hover,#4338ca)"
+  const surface = "var(--hive-color-surface,#ffffff)"
+  const border = "var(--hive-color-border,#e5e7eb)"
+  const textPrimary = "var(--hive-color-text,#111827)"
+  const textSecondary = "var(--hive-color-text-secondary,#6b7280)"
+  const textMuted = "var(--hive-color-text-secondary,#9ca3af)"
+
+  if (confirmed) {
+    return (
+      <div
+        className="max-w-[90%] rounded-2xl overflow-hidden mb-2"
+        style={{ border: `1px solid ${border}`, background: surface }}
+      >
+        <div className="px-4 py-2.5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-3.5 h-3.5" style={{ color: accent }} />
+              <div>
+                <span className="text-[10px] font-medium uppercase tracking-wide" style={{ color: textMuted }}>
+                  Move-in
+                </span>
+                <p className="text-sm font-semibold -mt-0.5" style={{ color: textPrimary }}>
+                  {formatDate(moveIn)}
+                </p>
+              </div>
+            </div>
+            <div className="w-px h-6" style={{ background: border }} />
+            <div className="flex items-center gap-2">
+              <Calendar className="w-3.5 h-3.5" style={{ color: accent }} />
+              <div>
+                <span className="text-[10px] font-medium uppercase tracking-wide" style={{ color: textMuted }}>
+                  Move-out
+                </span>
+                <p className="text-sm font-semibold -mt-0.5" style={{ color: textPrimary }}>
+                  {moveOut ? formatDate(moveOut) : "Flexible"}
+                </p>
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              setConfirmed(false)
+              setSelectingFor("moveIn")
+            }}
+            className="text-[11px] font-medium transition-colors ml-3 shrink-0"
+            style={{ color: accent }}
+          >
+            Edit
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className="max-w-[90%] rounded-2xl overflow-hidden"
+      style={{ border: `1px solid ${border}`, background: surface }}
+    >
+      <div className="px-4 py-3" style={{ borderBottom: `1px solid ${border}` }}>
+        <h4 className="text-sm font-semibold" style={{ color: textPrimary }}>
+          When do you need storage?
+        </h4>
+      </div>
+      <div className="px-4 py-3 space-y-4">
+        {/* Move-in section */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span
+              className="text-xs font-medium"
+              style={{ color: selectingFor === "moveIn" ? accent : textSecondary }}
+            >
+              Move in{" "}
+              {moveIn && (
+                <span className="font-normal ml-1" style={{ color: textMuted }}>
+                  {formatDate(moveIn)}
+                </span>
+              )}
+            </span>
+            <button
+              onClick={() => setSelectingFor("moveIn")}
+              className="text-[10px] font-medium"
+              style={{ color: selectingFor === "moveIn" ? accent : textMuted }}
+            >
+              {selectingFor === "moveIn" ? "selecting" : "edit"}
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {moveInChips.map((chip) => (
+              <button
+                key={chip.label}
+                onClick={() => {
+                  setMoveIn(chip.value)
+                  setSelectingFor("moveIn")
+                }}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                style={
+                  moveIn === chip.value
+                    ? { background: accent, color: "#fff", border: `1px solid ${accent}` }
+                    : { background: surface, color: textSecondary, border: `1px solid ${border}` }
+                }
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Mini calendar */}
+        <div className="rounded-xl p-2" style={{ border: `1px solid ${border}` }}>
+          <div className="flex items-center justify-between mb-2 px-1">
+            <button
+              onClick={() => setCalendarMonth(new Date(year, month - 1))}
+              className="p-1 rounded"
+            >
+              <ChevronDown className="w-3.5 h-3.5 rotate-90" style={{ color: textMuted }} />
+            </button>
+            <span className="text-xs font-semibold" style={{ color: textPrimary }}>
+              {monthYear}
+            </span>
+            <button
+              onClick={() => setCalendarMonth(new Date(year, month + 1))}
+              className="p-1 rounded"
+            >
+              <ChevronDown className="w-3.5 h-3.5 -rotate-90" style={{ color: textMuted }} />
+            </button>
+          </div>
+          <div className="grid grid-cols-7 gap-0 text-center">
+            {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((d) => (
+              <div key={d} className="text-[10px] font-medium py-0.5" style={{ color: textMuted }}>
+                {d}
+              </div>
+            ))}
+            {Array.from({ length: adjustedFirstDay }).map((_, i) => (
+              <div key={`empty-${i}`} />
+            ))}
+            {Array.from({ length: totalDays }).map((_, i) => {
+              const day = i + 1
+              const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+              const isPast = dateStr < todayStr
+              const isSelected = dateStr === moveIn || dateStr === moveOut
+              const isInRange = moveIn && moveOut && dateStr > moveIn && dateStr < moveOut
+              return (
+                <button
+                  key={day}
+                  disabled={isPast}
+                  onClick={() => handleDayClick(day)}
+                  className="w-7 h-7 mx-auto text-[11px] rounded-full transition-all"
+                  style={
+                    isPast
+                      ? { color: "#d1d5db", cursor: "not-allowed" }
+                      : isSelected
+                        ? { background: accent, color: "#fff", fontWeight: 600 }
+                        : isInRange
+                          ? { background: `color-mix(in srgb, ${accent} 10%, transparent)`, color: accent }
+                          : { color: textPrimary }
+                  }
+                >
+                  {day}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Move-out section */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span
+              className="text-xs font-medium"
+              style={{ color: selectingFor === "moveOut" ? accent : textSecondary }}
+            >
+              Move out{" "}
+              {moveOut && (
+                <span className="font-normal ml-1" style={{ color: textMuted }}>
+                  {formatDate(moveOut)}
+                </span>
+              )}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {(
+              [
+                { label: "Flexible", mode: "flexible" as const },
+                { label: "1 month", mode: "1month" as const },
+                { label: "3 months", mode: "3months" as const },
+                { label: "6 months", mode: "6months" as const },
+                { label: "12 months", mode: "12months" as const },
+                { label: "Pick date", mode: "custom" as const },
+              ] as const
+            ).map((chip) => (
+              <button
+                key={chip.mode}
+                onClick={() => handleMoveOutModeChange(chip.mode)}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                style={
+                  moveOutMode === chip.mode
+                    ? { background: accent, color: "#fff", border: `1px solid ${accent}` }
+                    : { background: surface, color: textSecondary, border: `1px solid ${border}` }
+                }
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Confirm */}
+        <button
+          onClick={() => {
+            setConfirmed(true)
+            onConfirm?.({ moveIn, moveOut: moveOut || null })
+          }}
+          className="w-full py-2.5 text-sm font-semibold rounded-xl transition-colors"
+          style={{ background: accent, color: "#fff" }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = accentHover)}
+          onMouseLeave={(e) => (e.currentTarget.style.background = accent)}
+        >
+          Confirm dates
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function defaultRenderToolResult(
   toolName: string,
   output: unknown,
@@ -593,6 +938,21 @@ export function defaultRenderToolResult(
       return <AccountProfileCard data={data} />
     case "getMyLoyalty":
       return <LoyaltyCard data={data} />
+    case "collectDates":
+      return (
+        <DatePickerCard
+          suggestedMoveIn={data.suggestedMoveIn as string | undefined}
+          suggestedMoveOut={data.suggestedMoveOut as string | undefined}
+          onConfirm={
+            onSendMessage
+              ? (dates) =>
+                  onSendMessage(
+                    `Move-in: ${dates.moveIn}${dates.moveOut ? `, Move-out: ${dates.moveOut}` : ", flexible move-out"}`,
+                  )
+              : undefined
+          }
+        />
+      )
     default:
       return null
   }
