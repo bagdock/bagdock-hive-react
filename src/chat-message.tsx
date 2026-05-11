@@ -46,8 +46,8 @@ export function ChatMessage({ message, onSendMessage, renderToolResult }: ChatMe
                   className={cn(
                     "max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed",
                     isUser
-                      ? "bg-[var(--hive-color-surface-user,#f3f4f6)] text-[var(--hive-color-text-user,#111827)] rounded-br-md"
-                      : "bg-[var(--hive-color-surface,#f9fafb)] border border-[var(--hive-color-border,#e5e7eb)] text-[var(--hive-color-text,#111827)] rounded-bl-md shadow-[var(--hive-shadow,0_1px_3px_0_rgb(0_0_0/0.1))]",
+                      ? "bg-[var(--hive-color-surface-user,var(--bd-surface-2,#f3f4f6))] text-[var(--hive-color-text-user,var(--bd-text,#111827))] rounded-br-md"
+                      : "bg-[var(--hive-color-surface,var(--bd-surface-2,#f9fafb))] border border-[var(--hive-color-border,var(--bd-border,#e5e7eb))] text-[var(--hive-color-text,var(--bd-text,#111827))] rounded-bl-md shadow-[var(--hive-shadow,var(--bd-shadow-card,0_1px_3px_0_rgb(0_0_0/0.1)))]",
                   )}
                 >
                   <ChatMarkdown content={part.text} />
@@ -128,15 +128,15 @@ export function ChatMessage({ message, onSendMessage, renderToolResult }: ChatMe
           className={cn(
             "max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed",
             isUser
-              ? "bg-[var(--hive-color-surface-user,#f3f4f6)] text-[var(--hive-color-text-user,#111827)] rounded-br-md"
-              : "bg-[var(--hive-color-surface,#f9fafb)] border border-[var(--hive-color-border,#e5e7eb)] text-[var(--hive-color-text,#111827)] rounded-bl-md shadow-[var(--hive-shadow,0_1px_3px_0_rgb(0_0_0/0.1))]",
+              ? "bg-[var(--hive-color-surface-user,var(--bd-surface-2,#f3f4f6))] text-[var(--hive-color-text-user,var(--bd-text,#111827))] rounded-br-md"
+              : "bg-[var(--hive-color-surface,var(--bd-surface-2,#f9fafb))] border border-[var(--hive-color-border,var(--bd-border,#e5e7eb))] text-[var(--hive-color-text,var(--bd-text,#111827))] rounded-bl-md shadow-[var(--hive-shadow,var(--bd-shadow-card,0_1px_3px_0_rgb(0_0_0/0.1)))]",
           )}
         >
           <ChatMarkdown content={message.content || ""} />
         </div>
       ) : !isUser && message.metadata?.routing ? (
-        <div className="max-w-[85%] px-4 py-3 bg-[var(--hive-color-surface,#f9fafb)] border border-[var(--hive-color-border,#e5e7eb)] rounded-2xl rounded-bl-md shadow-[var(--hive-shadow,0_1px_3px_0_rgb(0_0_0/0.1))]">
-          <div className="flex items-center gap-2 text-[var(--hive-color-text-secondary,#6b7280)]">
+        <div className="max-w-[85%] px-4 py-3 bg-[var(--hive-color-surface,var(--bd-surface-2,#f9fafb))] border border-[var(--hive-color-border,var(--bd-border,#e5e7eb))] rounded-2xl rounded-bl-md shadow-[var(--hive-shadow,var(--bd-shadow-card,0_1px_3px_0_rgb(0_0_0/0.1)))]">
+          <div className="flex items-center gap-2 text-[var(--hive-color-text-secondary,var(--bd-text-3,#6b7280))]">
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
             <span className="text-sm">Thinking...</span>
           </div>
@@ -144,7 +144,7 @@ export function ChatMessage({ message, onSendMessage, renderToolResult }: ChatMe
       ) : null}
 
       {message.timestamp && (
-        <span className="text-[10px] text-[var(--hive-color-text-secondary,#6b7280)] px-2">
+        <span className="text-[10px] text-[var(--hive-color-text-secondary,var(--bd-text-3,#6b7280))] px-2">
           {new Date(message.timestamp).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
@@ -158,8 +158,8 @@ export function ChatMessage({ message, onSendMessage, renderToolResult }: ChatMe
 export function LoadingMessage() {
   return (
     <div className="flex flex-col gap-1 items-start">
-      <div className="max-w-[85%] px-4 py-3 bg-[var(--hive-color-surface,#f9fafb)] border border-[var(--hive-color-border,#e5e7eb)] rounded-2xl rounded-bl-md shadow-[var(--hive-shadow,0_1px_3px_0_rgb(0_0_0/0.1))]">
-        <div className="flex items-center gap-2 text-[var(--hive-color-text-secondary,#6b7280)]">
+      <div className="max-w-[85%] px-4 py-3 bg-[var(--hive-color-surface,var(--bd-surface-2,#f9fafb))] border border-[var(--hive-color-border,var(--bd-border,#e5e7eb))] rounded-2xl rounded-bl-md shadow-[var(--hive-shadow,var(--bd-shadow-card,0_1px_3px_0_rgb(0_0_0/0.1)))]">
+        <div className="flex items-center gap-2 text-[var(--hive-color-text-secondary,var(--bd-text-3,#6b7280))]">
           <Loader2 className="w-3.5 h-3.5 animate-spin" />
           <span className="text-sm">Thinking...</span>
         </div>

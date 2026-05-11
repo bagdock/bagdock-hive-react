@@ -95,7 +95,7 @@ function splitTableRow(row: string): string[] {
 function renderBlock(block: Block, key: number): React.ReactNode {
   switch (block.type) {
     case "hr":
-      return <hr key={key} className="my-2 border-[var(--hive-color-border,#e5e7eb)]" />
+      return <hr key={key} className="my-2 border-[var(--hive-color-border,var(--bd-border,#e5e7eb))]" />
 
     case "table":
       return (
@@ -104,7 +104,7 @@ function renderBlock(block: Block, key: number): React.ReactNode {
             <thead>
               <tr>
                 {block.headers.map((h, j) => (
-                  <th key={j} className="text-left font-semibold text-[var(--hive-color-text,#374151)] px-2 py-1.5 border-b border-[var(--hive-color-border,#e5e7eb)]">
+                  <th key={j} className="text-left font-semibold text-[var(--hive-color-text,var(--bd-text,#374151))] px-2 py-1.5 border-b border-[var(--hive-color-border,var(--bd-border,#e5e7eb))]">
                     <InlineMarkdown text={h} />
                   </th>
                 ))}
@@ -112,9 +112,9 @@ function renderBlock(block: Block, key: number): React.ReactNode {
             </thead>
             <tbody>
               {block.rows.map((row, ri) => (
-                <tr key={ri} className="border-b border-[var(--hive-color-border,#f3f4f6)] last:border-0">
+                <tr key={ri} className="border-b border-[var(--hive-color-border,var(--bd-border,#f3f4f6))] last:border-0">
                   {row.map((cell, ci) => (
-                    <td key={ci} className="px-2 py-1.5 text-[var(--hive-color-text-secondary,#4b5563)]">
+                    <td key={ci} className="px-2 py-1.5 text-[var(--hive-color-text-secondary,var(--bd-text-2,#4b5563))]">
                       <InlineMarkdown text={cell} />
                     </td>
                   ))}
@@ -133,7 +133,7 @@ function renderBlock(block: Block, key: number): React.ReactNode {
           className={`my-1.5 space-y-0.5 ${block.ordered ? "list-decimal" : "list-disc"} pl-4`}
         >
           {block.items.map((item, j) => (
-            <li key={j} className="text-sm text-[var(--hive-color-text,#374151)] leading-relaxed">
+            <li key={j} className="text-sm text-[var(--hive-color-text,var(--bd-text,#374151))] leading-relaxed">
               <InlineMarkdown text={item} />
             </li>
           ))}
@@ -173,7 +173,7 @@ function parseInline(text: string): React.ReactNode[] {
       nodes.push(<em key={key++}>{match[3]}</em>)
     } else if (match[4]) {
       nodes.push(
-        <code key={key++} className="text-[0.85em] bg-[var(--hive-color-code-bg,#f3f4f6)] text-[var(--hive-color-code-text,#374151)] px-1 py-0.5 rounded">
+        <code key={key++} className="text-[0.85em] bg-[var(--hive-color-code-bg,var(--bd-surface-2,#f3f4f6))] text-[var(--hive-color-code-text,var(--bd-text,#374151))] px-1 py-0.5 rounded">
           {match[4]}
         </code>,
       )
