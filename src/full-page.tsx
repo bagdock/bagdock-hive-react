@@ -16,6 +16,16 @@ import { ChatMessage, LoadingMessage } from "./chat-message"
 import { Composer } from "./composer"
 import type { AIMessage, AIAssistantSuggestion, ToolResultRenderer } from "./types"
 
+function lastMessageShowsThinking(messages: AIMessage[]): boolean {
+  if (messages.length === 0) return false
+  const last = messages[messages.length - 1]
+  if (last.role === "user") return false
+  const hasParts = last.parts && last.parts.length > 0 &&
+    last.parts.some((p: any) => p.type === "text" || p.type?.startsWith("tool-"))
+  const hasContent = !!last.content?.trim()
+  return !hasParts && !hasContent && !!last.metadata?.routing
+}
+
 export interface HiveFullPageProps {
   messages?: AIMessage[]
   onSendMessage?: (message: string) => void
@@ -173,7 +183,7 @@ export function HiveFullPage({
                     renderToolResult={renderToolResult}
                   />
                 ))}
-                {isLoading && <LoadingMessage />}
+                {isLoading && !lastMessageShowsThinking(messages) && <LoadingMessage />}
                 <div ref={messagesEndRef} />
               </>
             )}

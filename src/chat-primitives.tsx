@@ -198,20 +198,20 @@ export function ToolExecutionStep({
           <div
             className={cn(
               "w-4.5 h-4.5 rounded-full flex items-center justify-center flex-shrink-0",
-              error ? "bg-red-50" : "bg-[var(--hive-color-surface,#f3f4f6)]",
+              error ? "bg-red-50" : "bg-[var(--hive-color-surface,var(--bd-surface-2,#f3f4f6))]",
             )}
           >
             {error ? (
               <AlertCircle className="w-3 h-3 text-[var(--hive-color-danger,#dc2626)]" />
             ) : (
-              <Check className="w-3 h-3 text-[var(--hive-color-text-secondary,#6b7280)]" />
+              <Check className="w-3 h-3 text-[var(--hive-color-text-secondary,var(--bd-text-2,#6b7280))]" />
             )}
           </div>
         ) : (
-          <Loader2 className="w-4 h-4 text-[var(--hive-color-text-secondary,#9ca3af)] animate-spin flex-shrink-0" />
+          <Loader2 className="w-4 h-4 text-[var(--hive-color-text-secondary,var(--bd-text-3,#9ca3af))] animate-spin flex-shrink-0" />
         )}
-        <span className="text-xs font-medium text-[var(--hive-color-text-secondary,#4b5563)]">{label}</span>
-        <span className="text-[10px] text-[var(--hive-color-text-secondary,#9ca3af)] ml-auto">
+        <span className="text-xs font-medium text-[var(--hive-color-text-secondary,var(--bd-text-2,#4b5563))]">{label}</span>
+        <span className="text-[10px] text-[var(--hive-color-text-secondary,var(--bd-text-3,#9ca3af))] ml-auto">
           {done ? (error ? "Failed" : "Done") : "Working\u2026"}
         </span>
       </div>
@@ -247,8 +247,8 @@ export function QuickReplyChips({
             picked === c.value
               ? "bg-[var(--hive-color-primary,#111827)] text-white border-[var(--hive-color-primary,#111827)]"
               : isDisabled
-                ? "bg-[var(--hive-color-chip-bg,#ffffff)] text-[var(--hive-color-text-secondary,#d1d5db)] border-[var(--hive-color-border,#f3f4f6)] cursor-default opacity-50"
-                : "bg-[var(--hive-color-chip-bg,#ffffff)] text-[var(--hive-color-chip-text,#374151)] border-[var(--hive-color-chip-border,#e5e7eb)] hover:border-[var(--hive-color-text-secondary,#9ca3af)] cursor-pointer",
+                ? "bg-[var(--hive-color-chip-bg,var(--bd-surface,#ffffff))] text-[var(--hive-color-text-secondary,var(--bd-text-3,#d1d5db))] border-[var(--hive-color-border,var(--bd-border,#f3f4f6))] cursor-default opacity-50"
+                : "bg-[var(--hive-color-chip-bg,var(--bd-surface,#ffffff))] text-[var(--hive-color-chip-text,var(--bd-text,#374151))] border-[var(--hive-color-chip-border,var(--bd-border,#e5e7eb))] hover:border-[var(--hive-color-text-secondary,var(--bd-text-3,#9ca3af))] cursor-pointer",
           )}
         >
           {c.label}
@@ -421,23 +421,23 @@ export function SecurePhoneInput({
 
   if (submitted) {
     return (
-      <div className="max-w-[90%] rounded-2xl border border-[var(--hive-color-border,#e5e7eb)] bg-[var(--hive-color-surface,#ffffff)] shadow-[var(--hive-shadow,0_1px_3px_0_rgb(0_0_0/0.1))] overflow-hidden">
+      <div className="max-w-[90%] rounded-2xl border border-[var(--hive-color-border,var(--bd-border,#e5e7eb))] bg-[var(--hive-color-surface,var(--bd-surface,#ffffff))] shadow-[var(--hive-shadow,var(--bd-shadow-card,0_1px_3px_0_rgb(0_0_0/0.1)))] overflow-hidden">
         <div className="px-4 py-4 flex items-center gap-2.5">
           <Check className="w-4 h-4 text-[var(--hive-color-success,#16a34a)] flex-shrink-0" />
-          <p className="text-sm text-[var(--hive-color-text,#374151)]">Phone number submitted</p>
+          <p className="text-sm text-[var(--hive-color-text,var(--bd-text,#374151))]">Phone number submitted</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-[90%] rounded-2xl border border-[var(--hive-color-border,#e5e7eb)] bg-[var(--hive-color-surface,#ffffff)] shadow-[var(--hive-shadow,0_1px_3px_0_rgb(0_0_0/0.1))] overflow-hidden">
-      <div className="px-4 py-3 border-b border-[var(--hive-color-border,#f3f4f6)] flex items-center gap-2.5">
+    <div className="max-w-[90%] rounded-2xl border border-[var(--hive-color-border,var(--bd-border,#e5e7eb))] bg-[var(--hive-color-surface,var(--bd-surface,#ffffff))] shadow-[var(--hive-shadow,var(--bd-shadow-card,0_1px_3px_0_rgb(0_0_0/0.1)))] overflow-hidden">
+      <div className="px-4 py-3 border-b border-[var(--hive-color-border,var(--bd-border,#f3f4f6))] flex items-center gap-2.5">
         <Lock className="w-4 h-4 text-[var(--hive-color-primary,#4f46e5)] flex-shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-[var(--hive-color-text,#111827)]">Secure callback</p>
+          <p className="text-sm font-semibold text-[var(--hive-color-text,var(--bd-text,#111827))]">Secure callback</p>
           {reason && (
-            <p className="text-xs text-[var(--hive-color-text-secondary,#6b7280)] mt-0.5">{reason}</p>
+            <p className="text-xs text-[var(--hive-color-text-secondary,var(--bd-text-2,#6b7280))] mt-0.5">{reason}</p>
           )}
         </div>
       </div>
@@ -450,7 +450,7 @@ export function SecurePhoneInput({
           <select
             value={countryCode}
             onChange={(e) => setCountryCode(e.target.value)}
-            className="w-20 px-2 py-2 rounded-lg border border-[var(--hive-color-border,#e5e7eb)] text-xs text-[var(--hive-color-text,#374151)] focus:outline-none bg-[var(--hive-color-bg,#ffffff)]"
+            className="w-20 px-2 py-2 rounded-lg border border-[var(--hive-color-border,var(--bd-border,#e5e7eb))] text-xs text-[var(--hive-color-text,var(--bd-text,#374151))] focus:outline-none bg-[var(--hive-color-bg,var(--bd-surface,#ffffff))]"
           >
             {countryCodes.map((c) => (
               <option key={c.code} value={c.code}>
@@ -464,7 +464,7 @@ export function SecurePhoneInput({
             onChange={(e) => setPhoneNumber(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
             placeholder="Phone number"
-            className="flex-1 px-3 py-2 rounded-lg border border-[var(--hive-color-border,#e5e7eb)] text-sm text-[var(--hive-color-text,#111827)] placeholder:text-[var(--hive-color-text-secondary,#9ca3af)] focus:outline-none bg-[var(--hive-color-bg,#ffffff)]"
+            className="flex-1 px-3 py-2 rounded-lg border border-[var(--hive-color-border,var(--bd-border,#e5e7eb))] text-sm text-[var(--hive-color-text,var(--bd-text,#111827))] placeholder:text-[var(--hive-color-text-secondary,var(--bd-text-3,#9ca3af))] focus:outline-none bg-[var(--hive-color-bg,var(--bd-surface,#ffffff))]"
           />
         </div>
 
@@ -481,7 +481,7 @@ export function SecurePhoneInput({
           {isSubmitting ? "Submitting..." : "Confirm number"}
         </button>
 
-        <p className="text-[10px] text-[var(--hive-color-text-secondary,#9ca3af)] text-center leading-relaxed">
+        <p className="text-[10px] text-[var(--hive-color-text-secondary,var(--bd-text-3,#9ca3af))] text-center leading-relaxed">
           Your number is shared only with the operator for this callback.
         </p>
       </div>

@@ -26,6 +26,16 @@ import { Composer } from "./composer"
 import { RecentThreadsDropdown } from "./recent-threads"
 import type { AIMessage, AIAssistantSuggestion, RecentThread, ToolResultRenderer } from "./types"
 
+function lastMessageShowsThinking(messages: AIMessage[]): boolean {
+  if (messages.length === 0) return false
+  const last = messages[messages.length - 1]
+  if (last.role === "user") return false
+  const hasParts = last.parts && last.parts.length > 0 &&
+    last.parts.some((p: any) => p.type === "text" || p.type?.startsWith("tool-"))
+  const hasContent = !!last.content?.trim()
+  return !hasParts && !hasContent && !!last.metadata?.routing
+}
+
 export interface HiveChatPanelProps {
   isOpen?: boolean
   onClose?: () => void
@@ -218,7 +228,7 @@ export function HiveChatPanel({
                   renderToolResult={renderToolResult}
                 />
               ))}
-              {isLoading && <LoadingMessage />}
+              {isLoading && !lastMessageShowsThinking(messages) && <LoadingMessage />}
               <div ref={messagesEndRef} />
             </>
           )}

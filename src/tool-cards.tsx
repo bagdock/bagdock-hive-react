@@ -269,9 +269,9 @@ function FacilityChip({
   return (
     <button
       onClick={onClick}
-      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[var(--hive-color-surface,#f3f4f6)] border border-[var(--hive-color-border,#e5e7eb)] hover:border-[var(--hive-color-border-hover,#d1d5db)] text-xs font-medium text-[var(--hive-color-text,#374151)] transition-colors"
+      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[var(--hive-color-surface,var(--bd-surface-2,#f3f4f6))] border border-[var(--hive-color-border,var(--bd-border,#e5e7eb))] hover:border-[var(--hive-color-border-hover,var(--bd-border-strong,#d1d5db))] text-xs font-medium text-[var(--hive-color-text,var(--bd-text,#374151))] transition-colors"
     >
-      <MapPin className="w-3 h-3 text-[var(--hive-color-text-secondary,#9ca3af)] flex-shrink-0" />
+      <MapPin className="w-3 h-3 text-[var(--hive-color-text-secondary,var(--bd-text-3,#9ca3af))] flex-shrink-0" />
       <span className="truncate max-w-[140px]">{name}</span>
     </button>
   )
@@ -303,22 +303,22 @@ function FacilityCardInline({
   const reviews = facility.totalReviews ?? facility.reviewCount
 
   return (
-    <div className="border border-[var(--hive-color-border,#e5e7eb)] rounded-lg hover:border-[var(--hive-color-border-hover,#d1d5db)] transition-all overflow-hidden">
+    <div className="border border-[var(--hive-color-border,var(--bd-border,#e5e7eb))] rounded-lg hover:border-[var(--hive-color-border-hover,var(--bd-border-strong,#d1d5db))] transition-all overflow-hidden">
       <div className="p-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-[var(--hive-color-text,#111827)] truncate">{facility.name}</p>
+            <p className="text-sm font-semibold text-[var(--hive-color-text,var(--bd-text,#111827))] truncate">{facility.name}</p>
             {facility.address && (
               <div className="flex items-center gap-1 mt-0.5">
-                <MapPin className="w-3 h-3 text-[var(--hive-color-text-secondary,#9ca3af)] flex-shrink-0" />
-                <span className="text-xs text-[var(--hive-color-text-secondary,#6b7280)] truncate">{facility.address}</span>
+                <MapPin className="w-3 h-3 text-[var(--hive-color-text-secondary,var(--bd-text-3,#9ca3af))] flex-shrink-0" />
+                <span className="text-xs text-[var(--hive-color-text-secondary,var(--bd-text-2,#6b7280))] truncate">{facility.address}</span>
               </div>
             )}
           </div>
           {price != null && (
             <div className="text-right flex-shrink-0">
-              <p className="text-sm font-bold text-[var(--hive-color-text,#111827)]">{currSym}{price.toFixed(0)}</p>
-              <p className="text-[10px] text-[var(--hive-color-text-secondary,#9ca3af)]">/mo</p>
+              <p className="text-sm font-bold text-[var(--hive-color-text,var(--bd-text,#111827))]">{currSym}{price.toFixed(0)}</p>
+              <p className="text-[10px] text-[var(--hive-color-text-secondary,var(--bd-text-3,#9ca3af))]">/mo</p>
             </div>
           )}
         </div>
@@ -326,15 +326,15 @@ function FacilityCardInline({
           {facility.rating != null && facility.rating > 0 && (
             <div className="flex items-center gap-1">
               <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-              <span className="text-xs font-medium text-[var(--hive-color-text,#374151)]">{facility.rating.toFixed(1)}</span>
+              <span className="text-xs font-medium text-[var(--hive-color-text,var(--bd-text,#374151))]">{facility.rating.toFixed(1)}</span>
               {reviews != null && (
-                <span className="text-xs text-[var(--hive-color-text-secondary,#9ca3af)]">({reviews})</span>
+                <span className="text-xs text-[var(--hive-color-text-secondary,var(--bd-text-3,#9ca3af))]">({reviews})</span>
               )}
             </div>
           )}
           <button
             onClick={() => onDetails?.(facility.name)}
-            className="flex items-center gap-0.5 text-xs font-medium text-[var(--hive-color-text-secondary,#6b7280)] hover:text-[var(--hive-color-text,#374151)] transition-colors"
+            className="flex items-center gap-0.5 text-xs font-medium text-[var(--hive-color-text-secondary,var(--bd-text-2,#6b7280))] hover:text-[var(--hive-color-text,var(--bd-text,#374151))] transition-colors"
           >
             Full details
             <ChevronRight className="w-3 h-3" />
@@ -343,10 +343,10 @@ function FacilityCardInline({
       </div>
 
       {units.length > 0 && (
-        <div className="border-t border-[var(--hive-color-border,#e5e7eb)] px-3 py-2 bg-[var(--hive-color-surface,#f9fafb)]">
+        <div className="border-t border-[var(--hive-color-border,var(--bd-border,#e5e7eb))] px-3 py-2 bg-[var(--hive-color-surface,var(--bd-surface-2,#f9fafb))]">
           <button
             onClick={() => setUnitsExpanded(!unitsExpanded)}
-            className="flex items-center gap-1 text-[11px] font-medium text-[var(--hive-color-text-secondary,#6b7280)] mb-1.5 hover:text-[var(--hive-color-text,#374151)] transition-colors"
+            className="flex items-center gap-1 text-[11px] font-medium text-[var(--hive-color-text-secondary,var(--bd-text-2,#6b7280))] mb-1.5 hover:text-[var(--hive-color-text,var(--bd-text,#374151))] transition-colors"
           >
             {units.length} unit size{units.length !== 1 ? "s" : ""} available
             {hasMoreUnits && (
@@ -360,17 +360,17 @@ function FacilityCardInline({
               <button
                 key={unit.size}
                 onClick={() => onSelectUnit?.(facility.name, unit)}
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--hive-color-surface-user,#ffffff)] border border-[var(--hive-color-border,#e5e7eb)] hover:border-[var(--hive-color-border-hover,#d1d5db)] text-[11px] font-medium text-[var(--hive-color-text,#374151)] transition-colors"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--hive-color-surface-user,var(--bd-surface,#ffffff))] border border-[var(--hive-color-border,var(--bd-border,#e5e7eb))] hover:border-[var(--hive-color-border-hover,var(--bd-border-strong,#d1d5db))] text-[11px] font-medium text-[var(--hive-color-text,var(--bd-text,#374151))] transition-colors"
               >
                 <span>{unit.size}</span>
-                <span className="text-[var(--hive-color-text-secondary,#9ca3af)]">&middot;</span>
-                <span className="text-[var(--hive-color-text,#111827)]">{currSym}{unit.price.toFixed(0)}/mo</span>
+                <span className="text-[var(--hive-color-text-secondary,var(--bd-text-3,#9ca3af))]">&middot;</span>
+                <span className="text-[var(--hive-color-text,var(--bd-text,#111827))]">{currSym}{unit.price.toFixed(0)}/mo</span>
               </button>
             ))}
             {hasMoreUnits && !unitsExpanded && (
               <button
                 onClick={() => setUnitsExpanded(true)}
-                className="inline-flex items-center px-2 py-1 rounded-full bg-[var(--hive-color-surface-user,#ffffff)] border border-dashed border-[var(--hive-color-border,#d1d5db)] text-[11px] text-[var(--hive-color-text-secondary,#9ca3af)] hover:text-[var(--hive-color-text,#374151)] transition-colors"
+                className="inline-flex items-center px-2 py-1 rounded-full bg-[var(--hive-color-surface-user,var(--bd-surface,#ffffff))] border border-dashed border-[var(--hive-color-border,#d1d5db)] text-[11px] text-[var(--hive-color-text-secondary,var(--bd-text-3,#9ca3af))] hover:text-[var(--hive-color-text,var(--bd-text,#374151))] transition-colors"
               >
                 +{units.length - UNIT_PILL_LIMIT} more
               </button>
@@ -458,14 +458,14 @@ export function SearchResultsCard({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-1.5 text-xs text-[var(--hive-color-text-secondary,#6b7280)]">
+      <div className="flex items-center gap-1.5 text-xs text-[var(--hive-color-text-secondary,var(--bd-text-2,#6b7280))]">
         <Search className="w-3 h-3" />
         <span>
-          <span className="font-medium text-[var(--hive-color-text,#374151)]">{facilities.length}</span>
+          <span className="font-medium text-[var(--hive-color-text,var(--bd-text,#374151))]">{facilities.length}</span>
           {" "}facilit{facilities.length === 1 ? "y" : "ies"}
           {city ? ` in ${city}` : ""}
           {lowestPrice < Infinity && (
-            <> from <span className="font-medium text-[var(--hive-color-text,#374151)]">{currSym}{lowestPrice.toFixed(0)}/mo</span></>
+            <> from <span className="font-medium text-[var(--hive-color-text,var(--bd-text,#374151))]">{currSym}{lowestPrice.toFixed(0)}/mo</span></>
           )}
         </span>
       </div>
@@ -495,7 +495,7 @@ export function SearchResultsCard({
       {hasMore && !expanded && (
         <button
           onClick={() => setExpanded(true)}
-          className="flex items-center gap-1 w-full justify-center py-2 text-xs font-medium text-[var(--hive-color-text-secondary,#6b7280)] hover:text-[var(--hive-color-text,#374151)] hover:bg-[var(--hive-color-surface,#f9fafb)] rounded-lg transition-colors"
+          className="flex items-center gap-1 w-full justify-center py-2 text-xs font-medium text-[var(--hive-color-text-secondary,var(--bd-text-2,#6b7280))] hover:text-[var(--hive-color-text,var(--bd-text,#374151))] hover:bg-[var(--hive-color-surface,var(--bd-surface-2,#f9fafb))] rounded-lg transition-colors"
         >
           <ChevronDown className="w-3.5 h-3.5" />
           Show {facilities.length - INITIAL_CARD_LIMIT} more
@@ -541,27 +541,27 @@ export function FacilityDetailCard({ data }: { data: Record<string, unknown> }) 
   const features = (raw.features as string[] | undefined) ?? []
 
   return (
-    <div className="border border-[var(--hive-color-border,#e5e7eb)] rounded-lg overflow-hidden">
+    <div className="border border-[var(--hive-color-border,var(--bd-border,#e5e7eb))] rounded-lg overflow-hidden">
       <div className="p-3">
-        <p className="text-sm font-semibold text-[var(--hive-color-text,#111827)]">{name}</p>
+        <p className="text-sm font-semibold text-[var(--hive-color-text,var(--bd-text,#111827))]">{name}</p>
         {address && (
           <div className="flex items-center gap-1 mt-0.5">
-            <MapPin className="w-3 h-3 text-[var(--hive-color-text-secondary,#9ca3af)] flex-shrink-0" />
-            <span className="text-xs text-[var(--hive-color-text-secondary,#6b7280)]">{String(address)}</span>
+            <MapPin className="w-3 h-3 text-[var(--hive-color-text-secondary,var(--bd-text-3,#9ca3af))] flex-shrink-0" />
+            <span className="text-xs text-[var(--hive-color-text-secondary,var(--bd-text-2,#6b7280))]">{String(address)}</span>
           </div>
         )}
         <div className="flex items-center gap-3 mt-1.5">
           {price != null && (
-            <span className="text-sm font-bold text-[var(--hive-color-text,#111827)]">
-              {currSym}{price.toFixed(0)}<span className="text-xs font-normal text-[var(--hive-color-text-secondary,#6b7280)]">/mo</span>
+            <span className="text-sm font-bold text-[var(--hive-color-text,var(--bd-text,#111827))]">
+              {currSym}{price.toFixed(0)}<span className="text-xs font-normal text-[var(--hive-color-text-secondary,var(--bd-text-2,#6b7280))]">/mo</span>
             </span>
           )}
           {rating != null && rating > 0 && (
             <div className="flex items-center gap-1">
               <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-              <span className="text-xs font-medium text-[var(--hive-color-text,#374151)]">{rating.toFixed(1)}</span>
+              <span className="text-xs font-medium text-[var(--hive-color-text,var(--bd-text,#374151))]">{rating.toFixed(1)}</span>
               {reviews != null && (
-                <span className="text-xs text-[var(--hive-color-text-secondary,#9ca3af)]">({reviews})</span>
+                <span className="text-xs text-[var(--hive-color-text-secondary,var(--bd-text-3,#9ca3af))]">({reviews})</span>
               )}
             </div>
           )}
@@ -571,7 +571,7 @@ export function FacilityDetailCard({ data }: { data: Record<string, unknown> }) 
             {features.slice(0, 6).map((f) => (
               <span
                 key={f}
-                className="px-2 py-0.5 rounded-full bg-[var(--hive-color-surface,#f3f4f6)] text-[10px] font-medium text-[var(--hive-color-text-secondary,#6b7280)]"
+                className="px-2 py-0.5 rounded-full bg-[var(--hive-color-surface,var(--bd-surface-2,#f3f4f6))] text-[10px] font-medium text-[var(--hive-color-text-secondary,var(--bd-text-2,#6b7280))]"
               >
                 {f}
               </span>
@@ -688,13 +688,13 @@ export function DatePickerCard({
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
   }
 
-  const accent = "var(--hive-color-accent,#4f46e5)"
-  const accentHover = "var(--hive-color-accent-hover,#4338ca)"
-  const surface = "var(--hive-color-surface,#ffffff)"
-  const border = "var(--hive-color-border,#e5e7eb)"
-  const textPrimary = "var(--hive-color-text,#111827)"
-  const textSecondary = "var(--hive-color-text-secondary,#6b7280)"
-  const textMuted = "var(--hive-color-text-secondary,#9ca3af)"
+  const accent = "var(--hive-color-accent,var(--bd-accent,#4f46e5))"
+  const accentHover = "var(--hive-color-accent-hover,var(--bd-accent-hover,#4338ca))"
+  const surface = "var(--hive-color-surface,var(--bd-surface,#ffffff))"
+  const border = "var(--hive-color-border,var(--bd-border,#e5e7eb))"
+  const textPrimary = "var(--hive-color-text,var(--bd-text,#111827))"
+  const textSecondary = "var(--hive-color-text-secondary,var(--bd-text-2,#6b7280))"
+  const textMuted = "var(--hive-color-text-secondary,var(--bd-text-3,#9ca3af))"
 
   if (confirmed) {
     return (
