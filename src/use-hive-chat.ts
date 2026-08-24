@@ -180,8 +180,9 @@ export function useHiveChat({
 
               let existingText: AIMessagePart | undefined
               for (let j = parts.length - 1; j >= 0; j--) {
-                if (parts[j].type === "text" && (parts[j] as any)._textId === deltaId) {
-                  existingText = parts[j]
+                const part = parts[j]
+                if (part && part.type === "text" && (part as any)._textId === deltaId) {
+                  existingText = part
                   break
                 }
               }
