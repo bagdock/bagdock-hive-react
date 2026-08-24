@@ -29,7 +29,7 @@ import type { AIMessage, AIAssistantSuggestion, RecentThread, ToolResultRenderer
 function lastMessageShowsThinking(messages: AIMessage[]): boolean {
   if (messages.length === 0) return false
   const last = messages[messages.length - 1]
-  if (last.role === "user") return false
+  if (!last || last.role === "user") return false
   const hasParts = last.parts && last.parts.length > 0 &&
     last.parts.some((p: any) => p.type === "text" || p.type?.startsWith("tool-"))
   const hasContent = !!last.content?.trim()
